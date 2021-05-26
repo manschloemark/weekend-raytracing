@@ -2,9 +2,10 @@
 
 #include "color.h"
 #include "hittable_list.h"
-#include "sphere.h"
-#include "camera.h"
 #include "material.h"
+#include "sphere.h"
+#include "moving_sphere.h"
+#include "camera.h"
 
 #include <iostream>
 
@@ -48,14 +49,15 @@ hittable_list random_scene() {
 
 	    double material = random_double();
 
-	    if (material <= 0.33) // Diffuse (lambertian)
+	    if (material <= 0.7) // Diffuse (lambertian)
 	    {
 	      auto albedo = color::random() * color::random();
 	      auto mat = make_shared<lambertian>(albedo);
-	      auto random_sphere = make_shared<sphere>(center, radius, mat);
+	      auto center2 = center + vec3(0, random_double(0, 0.5), 0);
+	      auto random_sphere = make_shared<moving_sphere>(center, center2, 0.0, 1.0, radius, mat);
 	      world.add(random_sphere);
       }
-	    else if (material <= 0.66) // Reflective (metal)
+	    else if (material <= 0.85) // Reflective (metal)
 	    {
 	      auto albedo = color::random();
 	      auto fuzziness = random_double();
@@ -87,11 +89,11 @@ int main()
 {
 	// Image
 
-	const auto aspect_ratio = 3.0 / 2.0;
-	const int image_width = 1200;
+	const auto aspect_ratio = 16.0 / 9.0;
+	const int image_width = 1920;
 	const int image_height = static_cast<int>(image_width / aspect_ratio);
-	const int samples_per_pixel = 50;
-	const int max_depth = 40;
+	const int samples_per_pixel = 40;
+	const int max_depth = 20;
 
 	// World / Scene
   auto world = random_scene();
@@ -125,10 +127,10 @@ int main()
   point3 lookfrom(12, 2, 1);
   point3 lookat(0, 0, -2);
   vec3 vup(0, 1, 0);
-  double vfov = 90;
+  double vfov = 60;
   auto dist_to_focus = 10.0;
   auto aperture = 0.1;
-  camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus);
+  camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
 
 	std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 
