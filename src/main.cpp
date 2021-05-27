@@ -9,6 +9,8 @@
 #include "scenes.h"
 #include "bvh.h"
 
+#include "timer.h"
+
 #include <iostream>
 
 color ray_color(const ray& r, const hittable& world, int depth)
@@ -45,8 +47,15 @@ int main()
 	const int max_depth = 20;
 
 	// World / Scene
+	timer t;
+	t.start();
   auto world = random_scene();
+  t.stop();
+  std::cerr << "It took " << t.duration_ms() << " milliseconds to load the scene.\n";
+  t.start();
   bvh_node bvh(world, 0.0, 1.0);
+  t.stop();
+  std::cerr << "It took " << t.duration_ms() << " milliseconds to create the bounding volume hierarchy.\n";
 
 	// Camera
   point3 lookfrom(12, 2, 1);
@@ -57,6 +66,7 @@ int main()
   auto aperture = 0.1;
   camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
 
+	t.start();
 	std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 
 	for (int j = image_height - 1; j >= 0; --j) {
@@ -72,5 +82,7 @@ int main()
 			write_color(std::cout, pixel_color, samples_per_pixel);
 		}
 	}
-	std::cerr << "\nDone.\n" << std::flush;
+	std::cerr << "\nDone.\n";
+	t.stop();
+	std::cerr << "Rendered in " << t.duration_s() << " seconds.\n" << std::flush;
 }
