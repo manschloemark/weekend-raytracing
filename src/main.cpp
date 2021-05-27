@@ -7,6 +7,7 @@
 #include "moving_sphere.h"
 #include "camera.h"
 #include "scenes.h"
+#include "bvh.h"
 
 #include <iostream>
 
@@ -45,6 +46,7 @@ int main()
 
 	// World / Scene
   auto world = random_scene();
+  bvh_node bvh(world, 0.0, 1.0);
 
 	// Camera
   point3 lookfrom(12, 2, 1);
@@ -65,7 +67,7 @@ int main()
 				auto u = double(i + random_double()) / (image_width - 1);
 				auto v = double(j + random_double()) / (image_height - 1);
 				ray r = cam.get_ray(u, v);
-				pixel_color += ray_color(r, world, max_depth);
+				pixel_color += ray_color(r, bvh, max_depth);
 			}
 			write_color(std::cout, pixel_color, samples_per_pixel);
 		}
