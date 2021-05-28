@@ -62,7 +62,7 @@ hittable_list random_scene() {
 	return world;
 }
 
-hittable_list simple_demo_scene()
+hittable_list material_demo_scene()
 {
 
 	// World / Scene
@@ -92,5 +92,30 @@ hittable_list simple_demo_scene()
 	world.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100.0, earth));
 
 	return world;
+}
+
+hittable_list two_spheres() {
+	hittable_list objects;
+
+	auto checker1 =  make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9), 5.0);
+	auto checker2 =  make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9), 20.0);
+	objects.add(make_shared<sphere>(point3(0, -10, 0), 10, make_shared<lambertian>(checker1)));
+	objects.add(make_shared<sphere>(point3(0, 10, 0), 10, make_shared<lambertian>(checker2)));
+
+	return objects;
+}
+
+hittable_list my_textures() {
+	hittable_list objects;
+
+	auto wave = make_shared<wave_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+	auto coord = make_shared<coordinate_texture>(color(1.0, 1.0, 1.0));
+	auto norm = make_shared<normal_texture>();
+
+	objects.add(make_shared<sphere>(point3(-1, 0, -2), 0.5, make_shared<lambertian>(wave)));
+	objects.add(make_shared<sphere>(point3(1, 0, -2), 0.5, make_shared<lambertian>(coord)));
+	objects.add(make_shared<sphere>(point3(0, 0, -2), 0.5, make_shared<lambertian>(norm)));
+
+	return objects;
 }
 #endif

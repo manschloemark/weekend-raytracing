@@ -42,34 +42,62 @@ int main()
 
 	const auto aspect_ratio = 16.0 / 9.0;
 	const int image_width = 800;
-	const int image_height = static_cast<int>(image_width / aspect_ratio);
 	const int samples_per_pixel = 100;
 	const int max_depth = 50;
 
-	// World / Scene
+	// World / Scene / Camera
+	hittable_list world;
+	point3 lookfrom;
+	point3 lookat;
+	auto vfov = 40;
+	auto aperture = 0.0;
+	vec3 vup(0, 1, 0);
+	auto dist_to_focus = 10.0;
+	const int image_height = static_cast<int>(image_width / aspect_ratio);
+
 	timer t;
 	t.start();
-  //auto world = random_scene();
-  hittable_list world;
-  auto wave = make_shared<wave_texture>(color(1, 0, 0), color(0, 1, 0));
-  auto mat = make_shared<lambertian>(wave);
-  world.add(make_shared<sphere>(point3(0, 0, -1), 0.5, mat));
-  t.stop();
-  std::cerr << "It took " << t.duration_ms() << " milliseconds to load the scene.\n";
-  t.start();
-  bvh_node bvh(world, 0.0, 1.0);
-  t.stop();
-  std::cerr << "It took " << t.duration_ms() << " milliseconds to create the bounding volume hierarchy.\n";
+	// Switch statement to pick different scene setups.
+	switch(3) {
+		case 1:
+			world = random_scene();
+			lookfrom = point3(13, 5, 3);
+			lookat = point3(0, 0, 0);
+			vfov = 30;
+			aperture = 0.1;
+			break;
+		case 2:
+			world = two_spheres();
+			lookfrom = point3(13, 2, 3);
+			lookat = point3(0, 0, 0);
+			vfov = 20.0;
+			break;
+		case 3:
+			world = my_textures();
+			lookfrom = point3(0, 0, 1);
+			lookat = point3(0, 0, -1);
+			vfov = 60;
+			aperture = 0.0;
+			dist_to_focus = 2.0;
+			break;
+		default:
+			world = material_demo_scene();
+			lookfrom = point3(0, 0, 0);
+			lookat = point3(0, 0, -1);
+			vfov = 90;
+			aperture = 0.0;
+			dist_to_focus = 5.0;
+			break;
+	}
+	camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
+	t.stop();
+	std::cerr << "It took " << t.duration_ms() << " milliseconds to load the scene and camera.\n";
 
-	// Camera
-  //point3 lookfrom(12, 2, 1);
-  point3 lookfrom(1, 0, -1);
-  point3 lookat(0, 0, -1);
-  vec3 vup(0, 1, 0);
-  double vfov = 60;
-  auto dist_to_focus = 1.0;
-  auto aperture = 0.1;
-  camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
+	// Create bounding volume hierarchy to speed up collision detection
+	t.start();
+	bvh_node bvh(world, 0.0, 1.0);
+	t.stop();
+	std::cerr << "It took " << t.duration_ms() << " milliseconds to create the bounding volume hierarchy.\n";
 
 	t.start();
 	std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";

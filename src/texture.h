@@ -76,4 +76,45 @@ class wave_texture : public texture {
         shared_ptr<texture> even;
 };
 
+class coordinate_texture : public texture {
+    public:
+        coordinate_texture(color c) : color_value(c) {}
+
+        virtual color value(double u, double v, const point3& p) const override {
+            return color(color_value.x() * u, color_value.y() * (u + v / 2.0), color_value.z() * v);
+        }
+
+    public:
+        color color_value;
+};
+
+// Note I'm not sure this is quite right but it was fun to work on.
+class normal_texture : public texture {
+    public:
+        normal_texture() {}
+
+        virtual color value(double u, double v, const point3& p) const override {
+            double y_n = fabs(v * 2.0 - 1.0);
+            double x_n, z_n;
+            double* intpart;
+            double frac = modf(u / 0.25, intpart);
+
+            // NOTE: not sure if 0 is x or z.
+            if (static_cast<long>(*intpart) % 2 == 0)
+            {
+                x_n = 1.0 - frac;
+                z_n = frac;
+            }
+            else
+            {
+                z_n = 1.0 - frac;
+                x_n = frac;
+            }
+            x_n *= 1.0 - y_n;
+            z_n *= 1.0 - y_n;
+
+            return color(x_n, y_n, z_n);
+        }
+};
+
 #endif
