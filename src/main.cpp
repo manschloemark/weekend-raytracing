@@ -58,7 +58,7 @@ int main()
 	timer t;
 	t.start();
 	// Switch statement to pick different scene setups.
-	switch(3) {
+	switch(7) {
 		case 1:
 			world = random_scene();
 			lookfrom = point3(13, 5, 3);
@@ -99,6 +99,12 @@ int main()
 			lookfrom = point3(13, 3, 3);
 			lookat = point3(0, 0, 0);
 			vfov = 40.0;
+			break;
+		case 7:
+			world = earth();
+			lookfrom = point3(0, 0, 0);
+			lookat = point3(0, 0, -1);
+			vfov = 30;
 			break;
 		default:
 			world = material_demo_scene();

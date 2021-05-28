@@ -83,7 +83,7 @@ hittable_list material_demo_scene()
 	auto stainless_steel = make_shared<metal>(color(0.7, 0.7, 0.7), 1.0);
 	auto copper = make_shared<metal>(color(0.8, 0.55, 0.2), 0.55);
 	auto glass = make_shared<dialectric>(1.5);
-	auto earth = make_shared<lambertian>(color(0.3, 0.8, 0.1));
+	auto earth = make_shared<lambertian>(make_shared<image_texture>("../resources/earth.jpg"));
 
 	world.add(make_shared<sphere>(point3(0.0, 0.0, -1.0), 0.4, glass));
 	world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.4, stainless_steel));
@@ -123,6 +123,14 @@ hittable_list two_turbulent_perlin_spheres() {
 	objects.add(make_shared<sphere>(point3(0, 2, -1), 2, make_shared<lambertian>(pertext)));
 
 	return objects;
+}
+
+hittable_list earth() {
+	auto earth_texture = make_shared<image_texture>("../resources/earth.jpg");
+	auto earth_surface = make_shared<lambertian>(earth_texture);
+	auto globe = make_shared<sphere>(point3(0, 0, -5), 1, earth_surface);
+
+	return hittable_list(globe);
 }
 
 hittable_list my_textures() {
