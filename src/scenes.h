@@ -10,7 +10,8 @@
 hittable_list random_scene() {
 	hittable_list world;
 
-	auto mat_ground = make_shared<lambertian>(color(0.4, 0.4, 0.2));
+	auto ground_texture = make_shared<checker_texture>(color(1.0, 1.0, 1.0), color(0.2, 0.5, 0.34), 20.0);
+	auto mat_ground = make_shared<lambertian>(ground_texture);
 
 	world.add(make_shared<sphere>(point3(0, -1000, 0), 1000, mat_ground));
 

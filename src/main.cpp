@@ -41,15 +41,19 @@ int main()
 	// Image
 
 	const auto aspect_ratio = 16.0 / 9.0;
-	const int image_width = 400;
+	const int image_width = 800;
 	const int image_height = static_cast<int>(image_width / aspect_ratio);
-	const int samples_per_pixel = 50;
-	const int max_depth = 20;
+	const int samples_per_pixel = 100;
+	const int max_depth = 50;
 
 	// World / Scene
 	timer t;
 	t.start();
-  auto world = random_scene();
+  //auto world = random_scene();
+  hittable_list world;
+  auto wave = make_shared<wave_texture>(color(1, 0, 0), color(0, 1, 0));
+  auto mat = make_shared<lambertian>(wave);
+  world.add(make_shared<sphere>(point3(0, 0, -1), 0.5, mat));
   t.stop();
   std::cerr << "It took " << t.duration_ms() << " milliseconds to load the scene.\n";
   t.start();
@@ -58,11 +62,12 @@ int main()
   std::cerr << "It took " << t.duration_ms() << " milliseconds to create the bounding volume hierarchy.\n";
 
 	// Camera
-  point3 lookfrom(12, 2, 1);
-  point3 lookat(0, 0, -2);
+  //point3 lookfrom(12, 2, 1);
+  point3 lookfrom(1, 0, -1);
+  point3 lookat(0, 0, -1);
   vec3 vup(0, 1, 0);
   double vfov = 60;
-  auto dist_to_focus = 10.0;
+  auto dist_to_focus = 1.0;
   auto aperture = 0.1;
   camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
 
