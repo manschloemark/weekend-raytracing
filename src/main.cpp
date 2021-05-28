@@ -94,6 +94,12 @@ int main()
 			aperture = 0.0;
 			dist_to_focus = 1.0;
 			break;
+		case 6:
+			world = two_turbulent_perlin_spheres();
+			lookfrom = point3(13, 3, 3);
+			lookat = point3(0, 0, 0);
+			vfov = 40.0;
+			break;
 		default:
 			world = material_demo_scene();
 			lookfrom = point3(0, 0, 0);
