@@ -73,12 +73,26 @@ int main()
 			vfov = 20.0;
 			break;
 		case 3:
+			world = two_perlin_spheres();
+			lookfrom = point3(13, 3, 3);
+			lookat = point3(0, 0, 0);
+			vfov = 40.0;
+			break;
+		case 4:
 			world = my_textures();
 			lookfrom = point3(0, 0, 1);
 			lookat = point3(0, 0, -1);
 			vfov = 60;
 			aperture = 0.0;
 			dist_to_focus = 2.0;
+			break;
+		case 5:
+			world = view_texture(make_shared<noise_texture>());
+			lookfrom = point3(0, 0, 0);
+			lookat = point3(0, 0, -1);
+			vfov = 90;
+			aperture = 0.0;
+			dist_to_focus = 1.0;
 			break;
 		default:
 			world = material_demo_scene();
