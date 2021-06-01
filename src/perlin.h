@@ -71,7 +71,7 @@ class perlin {
         }
 
     private:
-        static const int point_count = 255;
+        static const int point_count = 256;
         vec3* ranvec;
         int* perm_x;
         int* perm_y;

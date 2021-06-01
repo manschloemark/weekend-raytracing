@@ -131,6 +131,7 @@ class turbulent_noise_texture : public texture {
 
 class marbled_noise_texture : public texture {
     public:
+        marbled_noise_texture() {}
         marbled_noise_texture(double sc) : scale(sc) {} 
 
         virtual color value(double u, double v, const point3& p) const override {

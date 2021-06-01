@@ -57,16 +57,17 @@ int main()
 
 	vec3 vup(0, 1, 0);
 	auto dist_to_focus = 10.0;
-	const int image_height = static_cast<int>(image_width / aspect_ratio);
+	int image_height = static_cast<int>(image_width / aspect_ratio);
 
 	timer t;
 	t.start();
 	// Switch statement to pick different scene setups.
-	switch(12) {
+	switch(13) {
 		case 1:
 			world = random_scene();
 			lookfrom = point3(13, 5, 3);
 			lookat = point3(0, 0, 0);
+			samples_per_pixel = 700;
 			vfov = 30;
 			aperture = 0.1;
 			background = color(0.7, 0.8, 1.0);
@@ -157,11 +158,23 @@ int main()
 			break;
 		case 12:
 			world = cornell_box();
-			samples_per_pixel = 100;
+			samples_per_pixel = 500;
 			background = color(0, 0, 0);
 			aspect_ratio = 1.0;
 			image_width = 600;
 			lookfrom = point3(278, 278, -800);
+			lookat = point3(278, 278, 0);
+			vfov = 40.0;
+			break;
+		case 13:
+			world = book2_final();
+			samples_per_pixel = 500;
+			max_depth = 50;
+			aspect_ratio = 1.0;
+			image_width = 800;
+			image_height = image_width * aspect_ratio;
+			background = color(0, 0, 0);
+			lookfrom = point3(478, 278, -600);
 			lookat = point3(278, 278, 0);
 			vfov = 40.0;
 			break;
