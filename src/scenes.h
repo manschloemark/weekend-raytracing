@@ -11,7 +11,7 @@
 #include "constant_medium.h"
 #include "bvh.h"
 
-hittable_list random_scene() {
+hittable_list book1_final() {
 	hittable_list world;
 
 	auto ground_texture = make_shared<checker_texture>(color(1.0, 1.0, 1.0), color(0.2, 0.5, 0.34), 20.0);
@@ -70,7 +70,7 @@ hittable_list material_demo_scene()
 {
 
 	// World / Scene
-  auto world = random_scene();
+  auto world = book1_final();
 	// Scene from book
   auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
   auto material_center = make_shared<lambertian>(color(0.7, 0.3, 0.3));
@@ -304,6 +304,8 @@ hittable_list book2_final() {
 	auto boundary = make_shared<sphere>(point3(360, 150, 145), 70, make_shared<dialectric>(1.5));
 	objects.add(boundary);
 	objects.add(make_shared<constant_medium>(boundary, 0.2, color(0.2, 0.4, 0.9)));
+	// Remove this gas temporarily because it doesn't look great without really high
+	// sample rate. (Talking 10000+)
 	boundary = make_shared<sphere>(point3(0, 0, 0), 5000, make_shared<dialectric>(1.5));
 	objects.add(make_shared<constant_medium>(boundary, .0001, color(1, 1, 1)));
 
