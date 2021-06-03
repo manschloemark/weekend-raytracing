@@ -12,6 +12,7 @@
 #include "timer.h"
 
 #include <iostream>
+#include <unistd.h>
 
 color ray_color(const ray& r, const color& background, const hittable& world, int depth)
 {
@@ -39,6 +40,7 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
 
 int main()
 {
+	nice(1);
 	// Image
 	auto aspect_ratio = 16.0 / 9.0;
 	int image_width = 720;
@@ -118,37 +120,44 @@ int main()
 	t.start();
 	std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 
-	for (int j = image_height - 1; j >= 0; --j) {
-		std::cerr << "\rScanlines remaining: " << j << " " << std::flush;
-		for (int i = 0; i < image_width; ++i) {
-#if 0
-			double red = 0;
-			double green = 0;
-			double blue = 0;
-			for(int s = 0; s < samples_per_pixel; ++s) {
-				auto u = double(i + random_double()) / (image_width - 1);
-				auto v = double(j + random_double()) / (image_height - 1);
-				ray r = cam.get_ray(u, v);
-				color c = ray_color(r, background, bvh, max_depth);
-				red += c.x();
-				green += c.y();
-				blue += c.z();
+	int chunk_width = 32;
+	int chunk_height = 32;
+
+	color pixels[image_height][image_width];
+
+	std::cerr << "Rendering...";
+	#pragma omp parallel for collapse(2)
+	for(int j = image_height - 1; j >= 0; j = j - chunk_height)
+	{
+		for(int i = 0; i < image_width; i = i + chunk_width)
+		{
+			for(int dj = 0; dj < chunk_height; ++dj)
+			{
+				int y = j - dj;
+				if (y < 0)
+					break;
+				for (int di = 0; di < chunk_width; ++di)
+				{
+					int x = i + di;
+					if(x >= image_width)
+						break;
+					color pixel_color(0, 0, 0);
+					for (int s = 0; s < samples_per_pixel; ++s)
+					{
+						auto u = double(x + random_double()) / (image_width - 1);
+						auto v = double(y + random_double()) / (image_height - 1);
+						ray r = cam.get_ray(u, v);
+						pixel_color += ray_color(r, background, bvh, max_depth);
+					}
+					pixels[y][x] = pixel_color;
+				}
 			}
-			write_color(std::cout, color(red, green, blue), samples_per_pixel);
-#else
-			color pixel_color(0, 0, 0);
-			for(int s = 0; s < samples_per_pixel; ++s) {
-				auto u = double(i + random_double()) / (image_width - 1);
-				auto v = double(j + random_double()) / (image_height - 1);
-				ray r = cam.get_ray(u, v);
-				pixel_color += ray_color(r, background, bvh, max_depth);
-			}
-			//#pragma omp ordered
-			write_color(std::cout, pixel_color, samples_per_pixel);
-#endif
+
 		}
 	}
-	std::cerr << "\nDone.\n";
-	t.stop();
-	std::cerr << "Rendered in " << t.duration_s() << " seconds.\n" << std::flush;
+	std::cerr << "Writing...";
+	for(int j = image_height - 1; j >= 0; --j)
+		for(int i = 0; i < image_width; ++i)
+			write_color(std::cout, pixels[j][i], samples_per_pixel);
+	std::cerr << "\nDONE.\n";
 }
