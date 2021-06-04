@@ -63,7 +63,7 @@ int main()
 
 	timer t;
 	t.start();
-	switch(-1) {
+	switch(3) {
 		case 1:
 			samples_per_pixel = 700;
 
@@ -86,6 +86,17 @@ int main()
 			lookfrom = point3(478, 278, -600);
 			lookat = point3(278, 278, 0);
 			vfov = 40.0;
+			break;
+		case 3:
+			samples_per_pixel = 100;
+			aspect_ratio = 1.0;
+			image_width = 800;
+
+			world = solar_system();
+			background = color(0, 0, 0);
+			lookfrom = point3(0, 100, 100);
+			lookat = point3(50, 0, 0);
+			vfov = 30.0;
 			break;
 		default:
 			samples_per_pixel = 400;
@@ -122,8 +133,7 @@ int main()
 
 	int chunk_width = 32;
 	int chunk_height = 32;
-
-	color pixels[image_height][image_width];
+	color *pixels = (color *)malloc((image_width * image_height) * sizeof(color));
 
 	std::cerr << "Rendering...";
 	#pragma omp parallel for collapse(2)
@@ -149,7 +159,7 @@ int main()
 						ray r = cam.get_ray(u, v);
 						pixel_color += ray_color(r, background, bvh, max_depth);
 					}
-					pixels[y][x] = pixel_color;
+					pixels[(y * image_width) + x] = pixel_color;
 				}
 			}
 
@@ -158,6 +168,6 @@ int main()
 	std::cerr << "Writing...";
 	for(int j = image_height - 1; j >= 0; --j)
 		for(int i = 0; i < image_width; ++i)
-			write_color(std::cout, pixels[j][i], samples_per_pixel);
+			write_color(std::cout, (color)(pixels[(j * image_width) + i]), samples_per_pixel);
 	std::cerr << "\nDONE.\n";
 }

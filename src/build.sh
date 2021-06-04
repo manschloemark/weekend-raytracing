@@ -4,5 +4,5 @@ else filename=$(git branch --show-current)
 fi
 
 pushd ../build
-g++ ../src/main.cpp -o $filename.exe -fopenmp
+g++ ../src/main.cpp -o $filename -fopenmp
 popd

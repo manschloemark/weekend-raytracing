@@ -206,22 +206,31 @@ hittable_list simple_light() {
 
 hittable_list solar_system() {
 	hittable_list objects;
-
-	auto pertext = make_shared<marbled_noise_texture>(4);
-	auto difflight = make_shared<diffuse_light>(color(5, 4.5, 4));
-	auto mars_texture = make_shared<marbled_noise_texture>(3);
+	
+	// Sun
+  auto sun_light = make_shared<diffuse_light>(color(6, 4, 3));
+	auto sun = make_shared<sphere>(point3(0, 0, 0), 100, sun_light);
+	auto sun_gas_sphere = make_shared<sphere>(point3(0, 0, 0), 110, make_shared<dialectric>(1.5));
+	auto sun_gas = make_shared<constant_medium>(sun_gas_sphere, 0.001, color(0.9, 0.8, 0.5));
+	objects.add(sun);
+	objects.add(sun_gas);
+  // Mercury
+  // Venus
+  // Earth
 	auto earth_texture = make_shared<image_texture>("../resources/earth.jpg");
 	auto earth_surface = make_shared<lambertian>(earth_texture);
-
-	auto sun = make_shared<sphere>(point3(0, 0, 0), 2, difflight);
-	auto mars = make_shared<sphere>(point3(2, -1.5, 0), 0.7, make_shared<lambertian>(mars_texture));
-	auto terra = make_shared<sphere>(point3(4, 0, 0), 1, earth_surface);
-	auto moon = make_shared<sphere>(point3(4.2, 1.4, 1.2), 0.2, make_shared<lambertian>(pertext));
-
-	objects.add(sun);
-	objects.add(mars);
+	auto terra = make_shared<sphere>(point3(400, 0, 0), 1, earth_surface);
 	objects.add(terra);
-	objects.add(moon);
+  // Moon
+  // Mars
+  // Asteroid belt
+  // Jupiter
+  // Saturn
+  // Uranus
+  // Neptune
+  // Pluto
+
+
 
 	return objects;
 }
