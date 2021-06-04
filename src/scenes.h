@@ -129,6 +129,19 @@ hittable_list two_turbulent_perlin_spheres() {
 	return objects;
 }
 
+hittable_list colored_noise_demo() {
+	hittable_list objects;
+
+	auto pertext_one =  make_shared<colored_noise_texture>(color(1.0, 0.0, 0.0), 4.0);
+	auto pertext_two =  make_shared<colored_noise_texture>(color(0.0, 1.0, 0.0), 2.0);
+	auto gradient_pertext = make_shared<gradient_noise_texture>(color(1.0, 0.0, 0.0), color(0.0, 0.0, 1.0), 4.0);
+	objects.add(make_shared<sphere>(point3(0, -1000, -1), 1000, make_shared<lambertian>(pertext_one)));
+	objects.add(make_shared<sphere>(point3(-2, 2, -1), 2, make_shared<lambertian>(gradient_pertext)));
+	objects.add(make_shared<sphere>(point3(2, 2, -1), 2, make_shared<lambertian>(pertext_two)));
+
+	return objects;
+}
+
 hittable_list earth() {
 	auto earth_texture = make_shared<image_texture>("../resources/earth.jpg");
 	auto earth_surface = make_shared<lambertian>(earth_texture);
@@ -207,11 +220,16 @@ hittable_list simple_light() {
 hittable_list solar_system() {
 	hittable_list objects;
 	
-	// Sun
-  auto sun_light = make_shared<diffuse_light>(color(6, 4, 3));
-	auto sun = make_shared<sphere>(point3(0, 0, 0), 100, sun_light);
-	auto sun_gas_sphere = make_shared<sphere>(point3(0, 0, 0), 110, make_shared<dialectric>(1.5));
-	auto sun_gas = make_shared<constant_medium>(sun_gas_sphere, 0.001, color(0.9, 0.8, 0.5));
+	// Sun and lighting
+	auto scene_light = make_shared<diffuse_light>(color(7, 6, 6));
+	auto light_pane = make_shared<xy_rect>(-500, 500, -500, 500, 550, scene_light);
+	objects.add(light_pane);
+
+  //auto sun_light = make_shared<diffuse_light>(color(5, 4.5, 0));
+	auto sun_texture = make_shared<lambertian>(make_shared<gradient_noise_texture>(color(0.9, 0.8, 0.4), color(0.6, 0.3, 0.0), 2.0));
+	auto sun = make_shared<sphere>(point3(0, 0, 100), 500, sun_texture);
+	auto sun_gas_sphere = make_shared<sphere>(point3(0, 0, 100), 550, make_shared<dialectric>(1.5));
+	auto sun_gas = make_shared<constant_medium>(sun_gas_sphere, 0.1, color(0.9, 0.8, 0.5));
 	objects.add(sun);
 	objects.add(sun_gas);
   // Mercury
@@ -219,9 +237,13 @@ hittable_list solar_system() {
   // Earth
 	auto earth_texture = make_shared<image_texture>("../resources/earth.jpg");
 	auto earth_surface = make_shared<lambertian>(earth_texture);
-	auto terra = make_shared<sphere>(point3(400, 0, 0), 1, earth_surface);
+	auto terra = make_shared<sphere>(point3(400, 0, 0), 50, earth_surface);
 	objects.add(terra);
   // Moon
+	auto moon_texture = make_shared<colored_turbulent_noise>(color(0.8, 0.8, 0.8), 3.0);
+	auto moon_surface = make_shared<lambertian>(moon_texture);
+	auto moon = make_shared<sphere>(point3(452, 60, -2), 10, moon_surface);
+	objects.add(moon);
   // Mars
   // Asteroid belt
   // Jupiter

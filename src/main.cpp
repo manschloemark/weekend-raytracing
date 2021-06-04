@@ -64,54 +64,65 @@ int main()
 	timer t;
 	t.start();
 	switch(3) {
-		case 1:
-			samples_per_pixel = 700;
+	case 1:
+		samples_per_pixel = 700;
 
-			world = book1_final();
-			background = color(0.7, 0.8, 1.0);
+		world = book1_final();
+		background = color(0.7, 0.8, 1.0);
 
-			lookfrom = point3(13, 4, 2);
-			lookat = point3(0, 0, -2);
-			vfov = 40.0;
-			break;
-		case 2:
-			samples_per_pixel = 1000;
-			max_depth = 50;
-			aspect_ratio = 1.0;
-			image_width = 800;
+		lookfrom = point3(13, 4, 2);
+		lookat = point3(0, 0, -2);
+		vfov = 40.0;
+		break;
+	case 2:
+		samples_per_pixel = 1000;
+		max_depth = 50;
+		aspect_ratio = 1.0;
+		image_width = 800;
 
-			world = book2_final();
-			background = color(0, 0, 0);
+		world = book2_final();
+		background = color(0, 0, 0);
 
-			lookfrom = point3(478, 278, -600);
-			lookat = point3(278, 278, 0);
-			vfov = 40.0;
-			break;
-		case 3:
-			samples_per_pixel = 100;
-			aspect_ratio = 1.0;
-			image_width = 800;
+		lookfrom = point3(478, 278, -600);
+		lookat = point3(278, 278, 0);
+		vfov = 40.0;
+		break;
+	case 3:
+		samples_per_pixel = 50;
+		aspect_ratio = 16.0/9.0;
+		image_width = 480;
 
-			world = solar_system();
-			background = color(0, 0, 0);
-			lookfrom = point3(0, 100, 100);
-			lookat = point3(50, 0, 0);
-			vfov = 30.0;
-			break;
-		default:
-			samples_per_pixel = 400;
-			aspect_ratio = 1.0;
-			image_width = 400;
+		world = solar_system();
+		background = color(0, 0, 0);
+		lookfrom = point3(300, 50, 500);
+		lookat = point3(300, 0, 0);
+		vfov = 50.0;
+		break;
+	case 4:
+		samples_per_pixel = 100;
 
-			world = cornell_box();
-			background = color(0, 0, 0);
+		world = colored_noise_demo();
+		background = color(0.5, 0.8, 0.9);
 
-			lookfrom = point3(278, 278, -800);
-			lookat = point3(278, 278, 0);
-			vfov = 40.0;
-			break;
+		lookfrom = point3(0, 0, -10);
+		lookat = point3(0, 0, 0);
+		vfov = 45.0;
+		break;
+	default:
+		samples_per_pixel = 400;
+		aspect_ratio = 1.0;
+		image_width = 400;
+
+		world = cornell_box();
+		background = color(0, 0, 0);
+
+		lookfrom = point3(278, 278, -800);
+		lookat = point3(278, 278, 0);
+		vfov = 40.0;
+		break;
 	}
-	image_height = image_width * aspect_ratio;
+
+	image_height = static_cast<int>(image_width / aspect_ratio);
 	camera cam(lookfrom, lookat,
 				vup, vfov,
 				aspect_ratio,
@@ -136,7 +147,7 @@ int main()
 	color *pixels = (color *)malloc((image_width * image_height) * sizeof(color));
 
 	std::cerr << "Rendering...";
-	#pragma omp parallel for collapse(2)
+	#pragma omp parallel for collapse(2) num_threads(6)
 	for(int j = image_height - 1; j >= 0; j = j - chunk_height)
 	{
 		for(int i = 0; i < image_width; i = i + chunk_width)
@@ -162,12 +173,12 @@ int main()
 					pixels[(y * image_width) + x] = pixel_color;
 				}
 			}
-
 		}
 	}
 	std::cerr << "Writing...";
 	for(int j = image_height - 1; j >= 0; --j)
 		for(int i = 0; i < image_width; ++i)
 			write_color(std::cout, (color)(pixels[(j * image_width) + i]), samples_per_pixel);
+	free(pixels);
 	std::cerr << "\nDONE.\n";
 }
