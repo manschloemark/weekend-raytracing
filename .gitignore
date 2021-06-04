@@ -2,4 +2,4 @@
 *.exe
 *.o
 resources/
-build/timer.sh
+build/
