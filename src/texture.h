@@ -143,6 +143,60 @@ class marbled_noise_texture : public texture {
         double scale;
 };
 
+// @NOTE make this take a specific noise texture (or any texture, really)
+// so I can easily use marbled noise or turbulent etc.
+// Should I make a noise file that has functions for all sorts of noise?
+class colored_noise_texture : public texture {
+    public:
+				colored_noise_texture() {}
+				colored_noise_texture(shared_ptr<texture> t, double sc) : color_value(t), scale(sc) {}
+				colored_noise_texture(color c, double sc) : color_value(make_shared<solid_color>(c)), scale(sc) {}
+
+        virtual color value(double u, double v, const point3& p) const override {
+					auto n = 0.5 * (1.0 + noise.turbulence(scale * p));
+					return color_value->value(u, v, p) * (n * n);
+				}
+
+		public:
+			perlin noise;
+			double scale;
+			shared_ptr<texture> color_value;
+};
+
+class colored_turbulent_noise : public texture {
+	public:
+				colored_turbulent_noise() {}
+				colored_turbulent_noise(shared_ptr<texture> t, double sc) : color_value(t), scale(sc) {}
+				colored_turbulent_noise(color c, double sc) : color_value(make_shared<solid_color>(c)), scale(sc) {}
+
+				virtual color value(double u, double v, const point3& p) const override {
+					return color_value->value(u, v, p) * (noise.turbulence(scale * p));
+				}
+
+	public:
+		perlin noise;
+		double scale;
+		shared_ptr<texture> color_value;
+};
+
+class gradient_noise_texture : public texture {
+	public:
+		gradient_noise_texture() {}
+		gradient_noise_texture(shared_ptr<texture> t1, shared_ptr<texture> t2, double sc) : col1(t1), col2(t2), scale(sc) {}
+		gradient_noise_texture(color c1, color c2, double sc) : col1(make_shared<solid_color>(c1)), col2(make_shared<solid_color>(c2)), scale(sc) {}
+
+		virtual color value(double u, double v, const point3& p) const override {
+			return mix(col1->value(u, v, p), col2->value(u, v, p),
+                        0.5 * (1.0 + noise.noise(scale * p)));
+		}
+
+	public:
+		perlin noise;
+		double scale;
+		shared_ptr<texture> col1;
+		shared_ptr<texture> col2;
+};
+
 // Below are textures I have made myself
 class wave_texture : public texture {
     public:
@@ -213,5 +267,6 @@ class normal_texture : public texture {
             return color(x_n, y_n, z_n);
         }
 };
+
 
 #endif
