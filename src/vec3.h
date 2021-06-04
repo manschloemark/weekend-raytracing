@@ -152,5 +152,9 @@ vec3 random_in_hemisphere(const vec3& normal) {
 	}
 }
 
+// Color utility -- NOTE maybe move this?
+inline color mix(color a, color b, double k) {
+	return a * k + b * (1 - k);
+}
 
 #endif
