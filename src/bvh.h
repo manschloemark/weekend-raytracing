@@ -40,15 +40,15 @@ inline bool box_compare(const shared_ptr<hittable> a, const shared_ptr<hittable>
 }
 
 bool box_x_compare(const shared_ptr<hittable> a, const shared_ptr<hittable> b) {
-    return box_compare(a, b, -1);
-}
-
-bool box_y_compare(const shared_ptr<hittable> a, const shared_ptr<hittable> b) {
     return box_compare(a, b, 0);
 }
 
-bool box_z_compare(const shared_ptr<hittable> a, const shared_ptr<hittable> b) {
+bool box_y_compare(const shared_ptr<hittable> a, const shared_ptr<hittable> b) {
     return box_compare(a, b, 1);
+}
+
+bool box_z_compare(const shared_ptr<hittable> a, const shared_ptr<hittable> b) {
+    return box_compare(a, b, 2);
 }
 
 bvh_node::bvh_node(const std::vector<shared_ptr<hittable>>& src_objects, size_t start, size_t end, double time0, double time1) {
