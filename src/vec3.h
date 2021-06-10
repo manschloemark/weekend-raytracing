@@ -52,13 +52,13 @@ class vec3 {
 
 		inline static vec3 random(double min, double max) {
 			return vec3(random_double(min, max), random_double(min, max), random_double(min, max));
-}
+		}
 
-bool near_zero() const {
-	// Return true if the vector is close to zero in all dimensions.
-	const auto s = 1e-8;
-	return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
-}
+	bool near_zero() const {
+		// Return true if the vector is close to zero in all dimensions.
+		const auto s = 1e-8;
+		return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
+	}
 
 	public:
 		double e[3];
@@ -152,9 +152,23 @@ vec3 random_in_hemisphere(const vec3& normal) {
 	}
 }
 
+inline double min(const vec3& v) {
+	return fmin(v.e[0], fmin(v.e[1], v.e[2]));
+}
+
+inline double max(const vec3& v) {
+	return fmax(v.e[0], fmax(v.e[1], v.e[2]));
+}
+
+inline color clamp(color& c) {
+	color r = color(fmin(1.0, fmax(0.0, c.x())), fmin(1.0, fmax(0.0, c.y())), fmin(1.0, fmax(0.0, c.z())));
+	return r;
+}
+
 // Color utility -- NOTE maybe move this?
-inline color mix(color a, color b, double k) {
-	return a * k + b * (1 - k);
+inline color mix(const color& a, const color& b, double k) {
+	color r = ((k * a) + ((1.0 - k) * b));
+	return clamp(r);
 }
 
 #endif
