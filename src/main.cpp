@@ -1,5 +1,7 @@
-#include "common.h"
+#include <iostream>
+#include <unistd.h>
 
+#include "common.h"
 #include "color.h"
 #include "hittable_list.h"
 #include "material.h"
@@ -9,10 +11,14 @@
 #include "scenes.h"
 #include "bvh.h"
 
+// My files
 #include "timer.h"
-
-#include <iostream>
-#include <unistd.h>
+#include "demo_scenes.h"
+// I won't be checking for _OPENMP because I know I have it.
+// But it's a good idea to think about it for the future.
+#ifndef NUM_THREADS
+#define NUM_THREADS 1
+#endif
 
 color ray_color(const ray& r, const color& background, const hittable& world, int depth)
 {
@@ -38,7 +44,7 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
 	nice(1);
 	// Image
@@ -63,7 +69,7 @@ int main()
 
 	timer t;
 	t.start();
-	switch(3) {
+	switch(5) {
 	case 1:
 		samples_per_pixel = 700;
 
@@ -88,25 +94,55 @@ int main()
 		vfov = 40.0;
 		break;
 	case 3:
-		samples_per_pixel = 50;
+		samples_per_pixel = 500;
 		aspect_ratio = 16.0/9.0;
-		image_width = 480;
+		image_width = 1920;
 
 		world = solar_system();
 		background = color(0, 0, 0);
-		lookfrom = point3(300, 50, 500);
-		lookat = point3(300, 0, 0);
-		vfov = 50.0;
+		lookfrom = point3(250, 0, 300);
+		lookat = point3(250, 0, 0);
+		vfov = 60.0;
+		aperture = 0.0;
+		//dist_to_focus = (point3(25, 0, 25) - lookfrom).length();
+		dist_to_focus = 300.0;
 		break;
 	case 4:
-		samples_per_pixel = 100;
+		samples_per_pixel = 300;
 
 		world = colored_noise_demo();
 		background = color(0.5, 0.8, 0.9);
 
-		lookfrom = point3(0, 0, -10);
+		lookfrom = point3(0, 0, 10);
 		lookat = point3(0, 0, 0);
 		vfov = 45.0;
+		break;
+	case 5:
+		samples_per_pixel = 100;
+		aspect_ratio = 16.0 / 9.0;
+		image_width = 720;
+
+		world = texture_demo();
+		background = color(0.7, 0.8, 0.9);
+
+		lookfrom = point3(0, 0, 5);
+		lookat = point3(0, 0, -10);
+		dist_to_focus = (lookat - lookfrom).length();
+
+		vfov = 30.0;
+
+		break;
+	case 6:
+		samples_per_pixel = 250;
+		aspect_ratio = 16.0 / 9.0;
+		image_width = 1920;
+
+		world = rocky_surface_texture_demo();
+		background = color(1, 1, 1);
+		lookfrom = point3(1920 / 2, 1080 / 2, -5);
+		lookat = point3(1920 / 2, 1080 / 2, 0);
+		dist_to_focus = 5;
+		vfov = 60.0;
 		break;
 	default:
 		samples_per_pixel = 400;
@@ -121,8 +157,15 @@ int main()
 		vfov = 40.0;
 		break;
 	}
-
 	image_height = static_cast<int>(image_width / aspect_ratio);
+
+	// LAZY COMMAND LINE ARGUMENT CHECK
+	// SINCE I ONLY HAVE ONE ARGUMENT RIGHT NOW JUST CHECK THE NUMBER OF ARGs
+	// Test render flag, auto sets samples to very small amount.
+	if (argc > 1)
+		samples_per_pixel = 50;
+
+
 	camera cam(lookfrom, lookat,
 				vup, vfov,
 				aspect_ratio,
@@ -142,12 +185,12 @@ int main()
 	t.start();
 	std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 
-	int chunk_width = 32;
-	int chunk_height = 32;
+	int chunk_width = static_cast<int>(image_width / 32);
+	int chunk_height = static_cast<int>(image_height / 32);
 	color *pixels = (color *)malloc((image_width * image_height) * sizeof(color));
 
 	std::cerr << "Rendering...";
-	#pragma omp parallel for collapse(2) num_threads(6)
+	#pragma omp parallel for collapse(2) num_threads(NUM_THREADS)
 	for(int j = image_height - 1; j >= 0; j = j - chunk_height)
 	{
 		for(int i = 0; i < image_width; i = i + chunk_width)

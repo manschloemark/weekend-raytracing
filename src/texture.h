@@ -135,7 +135,7 @@ class marbled_noise_texture : public texture {
         marbled_noise_texture(double sc) : scale(sc) {} 
 
         virtual color value(double u, double v, const point3& p) const override {
-            return color(1, 1, 1) * 0.5 * (1.0 + sin(scale*p.y() + 10.0 * noise.turbulence(p)));
+            return color(1, 1, 1) * 0.5 * (1.0 + sin(scale * p.y() + 10.0 * noise.turbulence(p)));
         }
     
     public:
@@ -153,7 +153,7 @@ class colored_noise_texture : public texture {
 				colored_noise_texture(color c, double sc) : color_value(make_shared<solid_color>(c)), scale(sc) {}
 
         virtual color value(double u, double v, const point3& p) const override {
-					auto n = 0.5 * (1.0 + noise.turbulence(scale * p));
+					auto n = 0.5 * (1.0 + noise.noise(scale * p));
 					return color_value->value(u, v, p) * (n * n);
 				}
 
@@ -187,7 +187,8 @@ class gradient_noise_texture : public texture {
 
 		virtual color value(double u, double v, const point3& p) const override {
 			return mix(col1->value(u, v, p), col2->value(u, v, p),
-                        0.5 * (1.0 + noise.noise(scale * p)));
+                 noise.turbulence(scale * p));
+                        //(noise.turbulence(scale * p) > 0.5) ? 1.0 : 0.0);
 		}
 
 	public:
@@ -195,36 +196,6 @@ class gradient_noise_texture : public texture {
 		double scale;
 		shared_ptr<texture> col1;
 		shared_ptr<texture> col2;
-};
-
-// Below are textures I have made myself
-class wave_texture : public texture {
-    public:
-        wave_texture(color c1, color c2, double x_freq = 10.0, double y_freq = 10.0)
-        : even(make_shared<solid_color>(c1)), odd(make_shared<solid_color>(c2)), x_frequency(x_freq), y_frequency(y_freq) {}
-        wave_texture(shared_ptr<texture> c1, shared_ptr<texture> c2, double x_freq = 10.0, double y_freq = 10.0)
-        : even(c1), odd(c2), x_frequency(x_freq), y_frequency(y_freq) {}
-
-        virtual color value(double u, double v, const point3& p) const override {
-            auto wave_height = (sin(u * pi * x_frequency) + 1.0) * 0.5;
-            //auto wave_height = sin(u * pi) * 0.5;
-            //v *= (1.0 / y_freq);
-            
-            if (fmod(v, 1.0 / y_frequency) > wave_height * (1.0 / 2.0 * y_frequency))
-            {
-                return odd->value(u, v, p);
-            }
-            else
-            {
-                return even->value(u, v, p);
-            }
-
-        }
-
-    public:
-        double x_frequency, y_frequency;
-        shared_ptr<texture> odd;
-        shared_ptr<texture> even;
 };
 
 class coordinate_texture : public texture {

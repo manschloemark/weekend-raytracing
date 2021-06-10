@@ -66,81 +66,6 @@ hittable_list book1_final() {
 	return world;
 }
 
-hittable_list material_demo_scene()
-{
-
-	// World / Scene
-  auto world = book1_final();
-	// Scene from book
-  auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
-  auto material_center = make_shared<lambertian>(color(0.7, 0.3, 0.3));
-  auto material_left = make_shared<dialectric>(1.5);
-  auto material_right = make_shared<metal>(color(0.8, 0.8, 0.8), 1.0);
-
-  world.add(make_shared<sphere>(point3(0.0, -100.5, -1), 100, material_ground));
-  world.add(make_shared<sphere>(point3(-1.0, 0.0, -1), 0.5, material_left));
-  world.add(make_shared<sphere>(point3(-1.0, 0.0, -1), -0.45, material_left));
-  world.add(make_shared<sphere>(point3(0.0, 0.0, -1), 0.5, material_center));
-  world.add(make_shared<sphere>(point3(1.0, 0.0, -1), 0.5, material_right));
-
-  auto charcoal = make_shared<lambertian>(color(0.2, 0.2, 0.2));
-	auto stainless_steel = make_shared<metal>(color(0.7, 0.7, 0.7), 1.0);
-	auto copper = make_shared<metal>(color(0.8, 0.55, 0.2), 0.55);
-	auto glass = make_shared<dialectric>(1.5);
-	auto earth = make_shared<lambertian>(make_shared<image_texture>("../resources/earth.jpg"));
-
-	world.add(make_shared<sphere>(point3(0.0, 0.0, -1.0), 0.4, glass));
-	world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.4, stainless_steel));
-	world.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.4, copper));
-	world.add(make_shared<sphere>(point3(0.0, 1.0, -1.0), 0.4, charcoal));
-	world.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100.0, earth));
-
-	return world;
-}
-
-hittable_list two_spheres() {
-	hittable_list objects;
-
-	auto checker1 =  make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9), 5.0);
-	auto checker2 =  make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9), 20.0);
-	objects.add(make_shared<sphere>(point3(0, -10, 0), 10, make_shared<lambertian>(checker1)));
-	objects.add(make_shared<sphere>(point3(0, 10, 0), 10, make_shared<lambertian>(checker2)));
-
-	return objects;
-}
-
-hittable_list two_perlin_spheres() {
-	hittable_list objects;
-
-	auto pertext =  make_shared<marbled_noise_texture>(4.0);
-	objects.add(make_shared<sphere>(point3(0, -1000, -1), 1000, make_shared<lambertian>(pertext)));
-	objects.add(make_shared<sphere>(point3(0, 2, -1), 2, make_shared<lambertian>(pertext)));
-
-	return objects;
-}
-
-hittable_list two_turbulent_perlin_spheres() {
-	hittable_list objects;
-
-	auto pertext =  make_shared<turbulent_noise_texture>(4.0);
-	objects.add(make_shared<sphere>(point3(0, -1000, -1), 1000, make_shared<lambertian>(pertext)));
-	objects.add(make_shared<sphere>(point3(0, 2, -1), 2, make_shared<lambertian>(pertext)));
-
-	return objects;
-}
-
-hittable_list colored_noise_demo() {
-	hittable_list objects;
-
-	auto pertext_one =  make_shared<colored_noise_texture>(color(1.0, 0.0, 0.0), 4.0);
-	auto pertext_two =  make_shared<colored_noise_texture>(color(0.0, 1.0, 0.0), 2.0);
-	auto gradient_pertext = make_shared<gradient_noise_texture>(color(1.0, 0.0, 0.0), color(0.0, 0.0, 1.0), 4.0);
-	objects.add(make_shared<sphere>(point3(0, -1000, -1), 1000, make_shared<lambertian>(pertext_one)));
-	objects.add(make_shared<sphere>(point3(-2, 2, -1), 2, make_shared<lambertian>(gradient_pertext)));
-	objects.add(make_shared<sphere>(point3(2, 2, -1), 2, make_shared<lambertian>(pertext_two)));
-
-	return objects;
-}
 
 hittable_list earth() {
 	auto earth_texture = make_shared<image_texture>("../resources/earth.jpg");
@@ -181,27 +106,6 @@ hittable_list cornell_box() {
 	return objects;
 }
 
-hittable_list my_textures() {
-	hittable_list objects;
-
-	auto wave = make_shared<wave_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
-	auto coord = make_shared<coordinate_texture>(color(1.0, 1.0, 1.0));
-	auto norm = make_shared<normal_texture>();
-
-	objects.add(make_shared<sphere>(point3(-1, 0, -2), 0.5, make_shared<lambertian>(wave)));
-	objects.add(make_shared<sphere>(point3(1, 0, -2), 0.5, make_shared<lambertian>(coord)));
-	objects.add(make_shared<sphere>(point3(0, 0, -2), 0.5, make_shared<lambertian>(norm)));
-
-	return objects;
-}
-
-hittable_list view_texture(shared_ptr<texture> t) {
-	hittable_list objects;
-
-	objects.add(make_shared<sphere>(point3(0, 0, -1011), 1000.5, make_shared<lambertian>(t)));
-
-	return objects;
-}
 
 hittable_list simple_light() {
 	hittable_list objects;
@@ -220,31 +124,47 @@ hittable_list simple_light() {
 hittable_list solar_system() {
 	hittable_list objects;
 	
-	// Sun and lighting
-	auto scene_light = make_shared<diffuse_light>(color(7, 6, 6));
-	auto light_pane = make_shared<xy_rect>(-500, 500, -500, 500, 550, scene_light);
+	// LIGHTING
+	auto scene_light = make_shared<diffuse_light>(color(2, 2, 2));
+	auto light_pane = make_shared<xy_rect>(-500, 800, -500, 500, 510, scene_light);
 	objects.add(light_pane);
 
+	// SUN
   //auto sun_light = make_shared<diffuse_light>(color(5, 4.5, 0));
-	auto sun_texture = make_shared<lambertian>(make_shared<gradient_noise_texture>(color(0.9, 0.8, 0.4), color(0.6, 0.3, 0.0), 2.0));
-	auto sun = make_shared<sphere>(point3(0, 0, 100), 500, sun_texture);
-	auto sun_gas_sphere = make_shared<sphere>(point3(0, 0, 100), 550, make_shared<dialectric>(1.5));
-	auto sun_gas = make_shared<constant_medium>(sun_gas_sphere, 0.1, color(0.9, 0.8, 0.5));
+	auto sun_texture = make_shared<lambertian>(make_shared<gradient_noise_texture>(color(0.8, 0.6, 0.01), color(1.0, 0.1, 0.0), 0.1));
+	auto sun = make_shared<sphere>(point3(-1050, 0, 0), 1000, sun_texture);
+	auto sun_gas_sphere = make_shared<sphere>(point3(-1050, 0, 0), 1050, make_shared<metal>(color(1, 1, 1), 0.0));
+	auto sun_gas = make_shared<constant_medium>(sun_gas_sphere, 0.0005, color(0.9, 0.8, 0.5));
 	objects.add(sun);
 	objects.add(sun_gas);
-  // Mercury
-  // Venus
-  // Earth
+
+  // MERCURY
+	auto mercury_texture = make_shared<lambertian>(make_shared<rocky_surface_texture>(color(0.7, 0.7, 0.7), color(0, 0, 0), 1.0));
+	//auto mercury_texture = make_shared<lambertian>(make_shared<turbulent_noise_texture>(1.0));
+	auto mercury = make_shared<sphere>(point3(200, -15, 0), 20, mercury_texture);
+	objects.add(mercury);
+
+  // VENUS
+	auto venus_texture = make_shared<lambertian>(make_shared<dry_planet_texture>(color(0.8, 0.6, 0.1), color(0.7, 0.4, 0.1), 1.0));
+	auto venus = make_shared<sphere>(point3(315, 0, 0), 25, venus_texture);
+	objects.add(venus);
+
+  // EARTH
 	auto earth_texture = make_shared<image_texture>("../resources/earth.jpg");
 	auto earth_surface = make_shared<lambertian>(earth_texture);
-	auto terra = make_shared<sphere>(point3(400, 0, 0), 50, earth_surface);
+	auto terra = make_shared<sphere>(point3(400, 0, 0), 40, earth_surface);
 	objects.add(terra);
+
   // Moon
-	auto moon_texture = make_shared<colored_turbulent_noise>(color(0.8, 0.8, 0.8), 3.0);
+	auto moon_texture = make_shared<rocky_surface_texture>(color(0.5, 0.5, 0.5), color(0.8, 0.8, 0.8), 3.0);
 	auto moon_surface = make_shared<lambertian>(moon_texture);
-	auto moon = make_shared<sphere>(point3(452, 60, -2), 10, moon_surface);
+	auto moon = make_shared<sphere>(point3(452, 60, -2), 6, moon_surface);
 	objects.add(moon);
+
   // Mars
+	auto mars_texture = make_shared<lambertian>(make_shared<dry_planet_texture>(color(0.5, 0.45, 0.0), color(0.8, 0.25, 0.0), 2.0));
+	auto mars = make_shared<sphere>(point3(500, 12, 0), 30, mars_texture);
+	objects.add(mars);
   // Asteroid belt
   // Jupiter
   // Saturn
@@ -254,43 +174,6 @@ hittable_list solar_system() {
 
 
 
-	return objects;
-}
-
-hittable_list light_test() {
-	hittable_list objects;
-
-	double sphere_size = 0.35;
-
-	auto light_matr = make_shared<diffuse_light>(color(3, 1, 1));
-	auto lightr = make_shared<sphere>(point3(0, 0, 1), sphere_size, light_matr);
-	auto light_matg = make_shared<diffuse_light>(color(1, 3, 1));
-	auto lightg = make_shared<sphere>(point3(0.866, 0, -0.499), sphere_size, light_matg);
-	auto light_matb = make_shared<diffuse_light>(color(1, 1, 3));
-	auto lightb = make_shared<sphere>(point3(-0.866, 0, -0.499), sphere_size, light_matb);
-
-	auto mat1 = make_shared<metal>(color(0.8, 0.8, 0.8), 0.0);
-	auto ball1 = make_shared<sphere>(point3(0, 0, -1), sphere_size, mat1);
-	auto mat2 = make_shared<metal>(color(0.8, 0.8, 0.8), 0.5);
-	auto ball2 = make_shared<sphere>(point3(0.866, 0, 0.499), sphere_size, mat2);
-	auto mat3 = make_shared<metal>(color(0.8, 0.8, 0.8), 1.0);
-	auto ball3 = make_shared<sphere>(point3(0.866, 0, 0.499), sphere_size, mat3);
-
-	auto glass_mat = make_shared<dialectric>(1.5);
-	auto glass_ball = make_shared<sphere>(point3(0, 0, 0), sphere_size, glass_mat);
-	//auto glass_ball2 = make_shared<sphere>(point3(0, 3, 0), sphere_size, glass_mat);
-
-	auto bg_reflection = make_shared<metal>(color(1.0, 1.0, 1.0), 0.0);
-	objects.add(make_shared<sphere>(point3(-4, -1000, -10), 999, bg_reflection));
-
-	objects.add(lightr);
-	objects.add(lightg);
-	objects.add(lightb);
-	objects.add(ball1);
-	objects.add(ball2);
-	objects.add(ball3);
-	objects.add(glass_ball);
-	//objects.add(glass_ball2);
 	return objects;
 }
 
@@ -384,4 +267,5 @@ hittable_list playground() {
 
 	return objects;
 }
+
 #endif

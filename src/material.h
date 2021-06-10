@@ -4,6 +4,7 @@
 #include "common.h"
 #include "hittable.h"
 #include "texture.h"
+#include "stylized_texture.h"
 
 struct hit_record;
 
