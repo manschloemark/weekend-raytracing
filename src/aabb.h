@@ -40,7 +40,7 @@ inline bool aabb::hit(const ray& r, double t_min, double t_max) const {
 	  auto invD = 1.0f / r.direction()[a];
 	  auto t0 = (min()[a] - r.origin()[a]) * invD;
 	  auto t1 = (max()[a] - r.origin()[a]) * invD;
-	  if (invD < 0.0f)
+	  if (t1 < t0)
 		  std::swap(t0, t1);
 	  t_min = t0 > t_min ? t0 : t_min;
 	  t_max = t1 < t_max ? t1 : t_max;
