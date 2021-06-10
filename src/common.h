@@ -40,6 +40,12 @@ inline double clamp(double x, double min, double max)
 	return x;
 }
 
+inline double smoothstep(double e0, double e1, double x)
+{
+	x = clamp((x - e0) / (e1 - e0), 0.0f, 1.0f);
+	return x * x * (3 - 2 * x);
+}
+
 inline int random_int(int min, int max)
 {
 	return static_cast<int>(random_double(min, max + 1));
