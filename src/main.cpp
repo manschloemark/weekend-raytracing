@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 		vfov = 40.0;
 		break;
 	case 3:
-		samples_per_pixel = 200;
+		samples_per_pixel = 600;
 		aspect_ratio = 32.0/9.0;
 		image_width = 1920 * 2;
 
@@ -185,11 +185,16 @@ int main(int argc, char *argv[])
 	t.start();
 	std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 
-	int chunk_width = static_cast<int>(image_width / 32);
-	int chunk_height = static_cast<int>(image_height / 32);
+	int horizontal_chunk_count = 32;
+	int vertical_chunk_count = 32;
+
+	int chunk_width = static_cast<int>(image_width / horizontal_chunk_count);
+	int chunk_height = static_cast<int>(image_height / vertical_chunk_count);
 	color *pixels = (color *)malloc((image_width * image_height) * sizeof(color));
 
+	int chunks_remaining = horizontal_chunk_count * vertical_chunk_count;
 	std::cerr << "Rendering...";
+	std::cerr << chunks_remaining << " chunks.";
 	#pragma omp parallel for collapse(2) num_threads(NUM_THREADS)
 	for(int j = image_height - 1; j >= 0; j = j - chunk_height)
 	{
@@ -216,8 +221,11 @@ int main(int argc, char *argv[])
 					pixels[(y * image_width) + x] = pixel_color;
 				}
 			}
+			--chunks_remaining;
+			std::cerr << "\r" << chunks_remaining << " chunks remaining." << std::flush;
 		}
 	}
+
 	std::cerr << "Writing...";
 	for(int j = image_height - 1; j >= 0; --j)
 		for(int i = 0; i < image_width; ++i)
