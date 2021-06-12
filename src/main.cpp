@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 
 	timer t;
 	t.start();
-	switch(5) {
+	switch(3) {
 	case 1:
 		samples_per_pixel = 700;
 
@@ -94,18 +94,18 @@ int main(int argc, char *argv[])
 		vfov = 40.0;
 		break;
 	case 3:
-		samples_per_pixel = 500;
-		aspect_ratio = 16.0/9.0;
-		image_width = 1920;
+		samples_per_pixel = 200;
+		aspect_ratio = 32.0/9.0;
+		image_width = 1920 * 2;
 
 		world = solar_system();
 		background = color(0, 0, 0);
-		lookfrom = point3(250, 0, 300);
-		lookat = point3(250, 0, 0);
-		vfov = 60.0;
+		lookfrom = point3(100, 0, 100);
+		lookat = point3(100, 0, 0);
+		vfov = 45.0;
 		aperture = 0.0;
 		//dist_to_focus = (point3(25, 0, 25) - lookfrom).length();
-		dist_to_focus = 300.0;
+		dist_to_focus = 100;
 		break;
 	case 4:
 		samples_per_pixel = 300;
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 		vfov = 45.0;
 		break;
 	case 5:
-		samples_per_pixel = 100;
+		samples_per_pixel = 50;
 		aspect_ratio = 16.0 / 9.0;
 		image_width = 720;
 
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 		background = color(0.7, 0.8, 0.9);
 
 		lookfrom = point3(0, 0, 5);
-		lookat = point3(0, 0, -10);
+		lookat = point3(0, 0, -15);
 		dist_to_focus = (lookat - lookfrom).length();
 
 		vfov = 30.0;

@@ -255,15 +255,9 @@ hittable_list rocky_surface_texture_demo() {
 hittable_list texture_demo(){
 	hittable_list objects;
 
-	color colorA = color(1, 1, 1);
-	color colorB = color(0, 0, 0);
-	double u_pd = 4.0;
-	double v_pd = 4.0;
-	double scale = 0.2;
-
-	auto text = make_shared<testing_texture>(colorA, colorB, u_pd, v_pd, scale);
+	auto text = make_shared<random_stars>(0.001, 30.0);
 	auto mat = make_shared<lambertian>(text);
-	auto sph = make_shared<sphere>(point3(0, 0, -15), 5.0, mat);
+	auto sph = make_shared<xy_rect>(-5, 5, -5, 5, -15, mat);
 	objects.add(sph);
 
 	return objects;
