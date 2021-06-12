@@ -127,11 +127,11 @@ hittable_list solar_system() {
 	// Radii of planets (and moon) divided by radius of mercury
 	// With some extra shrinkage to the larger planets
 	double r_sun     = 285.21767810026387;
-	double r_mercury = 1.0;
-	double r_venus   = 2.480211081794195;
-	double r_earth   = 2.6108179419525066;
-	double r_moon    = 0.7117414248021108;
-	double r_mars    = 1.3891820580474934;
+	double r_mercury = 1.0 * 2.0;
+	double r_venus   = 2.480211081794195 * 1.5;
+	double r_earth   = 2.6108179419525066 * 1.5;
+	double r_moon    = 0.7117414248021108 * 1.5;
+	double r_mars    = 1.3891820580474934 * 1.5;
 	double r_jupiter = 28.655013192612138 * 0.4;
 	double r_saturn  = 23.868073878627968 * 0.4;
 	double r_uranus  = 10.395118733509236 * 0.4;
@@ -139,15 +139,15 @@ hittable_list solar_system() {
 
 	// x coordinate objects should lie on
 	// These are pretty much random, not scaled from actual distances
-	double x_sun = r_sun * -1.55;
-	double x_mercury = 0.0;
-	double x_venus = 10.0;
-	double x_earth = 32.0;
-	double x_mars = 48.0;
+	double x_sun = r_sun * -1.5;
+	double x_mercury = 6.0;
+	double x_venus = 14.0;
+	double x_earth = 48.0;
+	double x_mars = 64.0;
 
-	double x_jupiter = 92.0;
-	double x_saturn = 136.0;
-	double x_uranus = 174.0;
+	double x_jupiter = 116.0;
+	double x_saturn = 156.0;
+	double x_uranus = 194.0;
 	double x_neptune = 220.0;
 	
 	// LIGHTING
@@ -155,7 +155,7 @@ hittable_list solar_system() {
 	auto light_pane = make_shared<xy_rect>(50, 150, -50, 50, 150, scene_light);
 	objects.add(light_pane);
 
-	auto star_bg_texture = make_shared<random_stars>(0.00001, 40.0);
+	auto star_bg_texture = make_shared<random_stars>(0.000002, 40.0);
 	auto star_bg_mat = make_shared<diffuse_light>(star_bg_texture);
 	auto star_bg = make_shared<xy_rect>(-600, 600, -300, 300, -100, star_bg_mat);
 	objects.add(star_bg);
@@ -168,7 +168,7 @@ hittable_list solar_system() {
   // MERCURY
 	auto mercury_texture = make_shared<image_texture>("../resources/mercury.jpg");
 	auto mercury_surface = make_shared<lambertian>(mercury_texture);
-	auto mercury = make_shared<sphere>(point3(x_mercury, 8, 0), r_mercury, mercury_surface);
+	auto mercury = make_shared<sphere>(point3(x_mercury, -2, 0), r_mercury, mercury_surface);
 	objects.add(mercury);
 
   // VENUS
@@ -187,13 +187,13 @@ hittable_list solar_system() {
   // Moon
 	auto moon_texture = make_shared<image_texture>("../resources/moon.jpg");
 	auto moon_surface = make_shared<lambertian>(moon_texture);
-	auto moon = make_shared<sphere>(point3(x_earth - (r_earth * 0.8), 2.0, 1.0), r_moon, moon_surface);
+	auto moon = make_shared<sphere>(point3(x_earth - (r_earth * 0.8), -2, 3.0), r_moon, moon_surface);
 	objects.add(moon);
 
   // Mars
 	auto mars_texture = make_shared<image_texture>("../resources/mars.jpg");
 	auto mars_surface = make_shared<lambertian>(mars_texture);
-	auto mars = make_shared<sphere>(point3(x_mars, 1, 0), r_mars, mars_surface);
+	auto mars = make_shared<sphere>(point3(x_mars, 5, 0), r_mars, mars_surface);
 	objects.add(mars);
   // Asteroid belt
   // Jupiter
@@ -204,23 +204,21 @@ hittable_list solar_system() {
   // Saturn
 	auto saturn_texture = make_shared<image_texture>("../resources/saturn.jpg");
 	auto saturn_surface = make_shared<lambertian>(saturn_texture);
-	auto saturn = make_shared<sphere>(point3(x_saturn, -4, 0), r_saturn, saturn_surface);
+	auto saturn = make_shared<sphere>(point3(x_saturn, -12, 0), r_saturn, saturn_surface);
 	objects.add(saturn);
   // Uranus
 	auto uranus_texture = make_shared<image_texture>("../resources/uranus.jpg");
 	auto uranus_surface = make_shared<lambertian>(uranus_texture);
-	auto uranus = make_shared<sphere>(point3(x_uranus, -10, 0), r_uranus, uranus_surface);
+	auto uranus = make_shared<sphere>(point3(x_uranus, -4, 0), r_uranus, uranus_surface);
 	objects.add(uranus);
   // Neptune
 	auto neptune_texture = make_shared<image_texture>("../resources/neptune.jpg");
 	auto neptune_surface = make_shared<lambertian>(neptune_texture);
-	auto neptune = make_shared<sphere>(point3(x_neptune, 0, 0), r_neptune, neptune_surface);
+	auto neptune = make_shared<sphere>(point3(x_neptune, 16, 0), r_neptune, neptune_surface);
 	objects.add(neptune);
 	//
   // Pluto
 	// It's a small planet. It can't be seen.
-
-
 
 	return objects;
 }
