@@ -165,7 +165,7 @@ inline color clamp(color& c) {
 	return r;
 }
 
-// Color utility -- NOTE maybe move this?
+// Color utility -- maybe move this?
 inline color mix(const color& a, const color& b, double k) {
 	color r = ((k * a) + ((1.0 - k) * b));
 	return clamp(r);
