@@ -125,6 +125,39 @@ class diffuse_light : public material {
 		shared_ptr<texture> emit;
 };
 
+class diffuse_light_dim_edges : public material {
+	public:
+		diffuse_light_dim_edges(shared_ptr<texture> a) : emit(a) {}
+		diffuse_light_dim_edges(color c) : emit(make_shared<solid_color>(c)) {}
+
+		virtual bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override {
+			// So the dimming part of this works, the only real issue is that the current architecture is not built
+			// for something like this.
+			// Since this a scatter method, I'm supposed to redirect the light somewhere else.
+			// But I don't actaully want to scatter, I just want to dim the light then the viewing ray is looking at a
+			// angle.
+			if (random_double() > 0.8)
+				return false;
+			vec3 viewer = r_in.origin() + r_in.direction();
+			double angle = acos(dot(viewer, rec.normal) / viewer.length());
+			double pi_over_two = pi / 2.0;
+			angle = fmod(fabs(angle), pi_over_two) / pi_over_two;
+			double dim = smoothstep(-0.1, 0.35, angle); 
+			if (dim == 1.0)
+				return false;
+			attenuation = color(-1, -1, -1) * (1.0 - dim);
+			scattered = r_in;
+			return true;
+		}
+
+		virtual color emitted(double u, double v, const point3& p) const override {
+			return emit->value(u, v, p);
+		}
+
+	public:
+		shared_ptr<texture> emit;
+};
+
 class isotropic : public material {
 	public:
 		isotropic(color c) : albedo(make_shared<solid_color>(c)) {}
