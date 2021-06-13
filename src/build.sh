@@ -7,7 +7,7 @@ then filename=$1
 	else numprocs=""
 	fi
 else
-	filename=$(git branch --show-current)
+	filename=$(git branch --show-current).exe
 	numprocs=""
 fi
 
