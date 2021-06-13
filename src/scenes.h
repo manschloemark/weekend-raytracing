@@ -127,23 +127,23 @@ hittable_list solar_system() {
 	// Radii of planets (and moon) divided by radius of mercury
 	// With some extra shrinkage to the larger planets
 	double r_sun     = 285.21767810026387;
-	double r_mercury = 1.0 * 2.0;
-	double r_venus   = 2.480211081794195 * 1.5;
-	double r_earth   = 2.6108179419525066 * 1.5;
-	double r_moon    = 0.7117414248021108 * 1.5;
-	double r_mars    = 1.3891820580474934 * 1.5;
-	double r_jupiter = 28.655013192612138 * 0.4;
-	double r_saturn  = 23.868073878627968 * 0.4;
-	double r_uranus  = 10.395118733509236 * 0.4;
-	double r_neptune = 10.091688654353563 * 0.4;
+	double r_mercury = 1.0 * 2.5;
+	double r_venus   = 2.480211081794195 * 2.0;
+	double r_earth   = 2.6108179419525066 * 2.0;
+	double r_moon    = 0.7117414248021108 * 2.0;
+	double r_mars    = 1.3891820580474934 * 2.0;
+	double r_jupiter = 28.655013192612138 * 0.45;
+	double r_saturn  = 23.868073878627968 * 0.45;
+	double r_uranus  = 10.395118733509236 * 0.45;
+	double r_neptune = 10.091688654353563 * 0.45;
 
 	// x coordinate objects should lie on
 	// These are pretty much random, not scaled from actual distances
 	double x_sun = r_sun * -1.5;
-	double x_mercury = 6.0;
-	double x_venus = 14.0;
-	double x_earth = 48.0;
-	double x_mars = 64.0;
+	double x_mercury = -5.0;
+	double x_venus = 22.0;
+	double x_earth = 52.0;
+	double x_mars = 78.0;
 
 	double x_jupiter = 116.0;
 	double x_saturn = 156.0;
@@ -151,11 +151,11 @@ hittable_list solar_system() {
 	double x_neptune = 220.0;
 	
 	// LIGHTING
-	auto scene_light = make_shared<diffuse_light>(color(0.5, 0.5, 0.5));
+	auto scene_light = make_shared<diffuse_light>(color(0.4, 0.4, 0.4));
 	auto light_pane = make_shared<xy_rect>(50, 150, -50, 50, 150, scene_light);
 	objects.add(light_pane);
 
-	auto star_bg_texture = make_shared<random_stars>(0.000002, 40.0);
+	auto star_bg_texture = make_shared<random_stars>(0.000003, 45.0);
 	auto star_bg_mat = make_shared<diffuse_light>(star_bg_texture);
 	auto star_bg = make_shared<xy_rect>(-600, 600, -300, 300, -100, star_bg_mat);
 	objects.add(star_bg);
@@ -187,7 +187,7 @@ hittable_list solar_system() {
   // Moon
 	auto moon_texture = make_shared<image_texture>("../resources/moon.jpg");
 	auto moon_surface = make_shared<lambertian>(moon_texture);
-	auto moon = make_shared<sphere>(point3(x_earth - (r_earth * 0.8), -2, 3.0), r_moon, moon_surface);
+	auto moon = make_shared<sphere>(point3(x_earth - (r_earth * 0.8), -2, 1.2), r_moon, moon_surface);
 	objects.add(moon);
 
   // Mars
