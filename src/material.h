@@ -127,8 +127,8 @@ class diffuse_light : public material {
 
 class diffuse_light_dim_edges : public material {
 	public:
-		diffuse_light_dim_edges(shared_ptr<texture> a) : emit(a) {}
-		diffuse_light_dim_edges(color c) : emit(make_shared<solid_color>(c)) {}
+		diffuse_light_dim_edges(shared_ptr<texture> a, double w) : emit(a), width(w) {}
+		diffuse_light_dim_edges(color c, double w) : emit(make_shared<solid_color>(c)), width(w) {}
 
 		virtual bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override {
 			// So the dimming part of this works, the only real issue is that the current architecture is not built
@@ -142,7 +142,7 @@ class diffuse_light_dim_edges : public material {
 			double angle = acos(dot(viewer, rec.normal) / viewer.length());
 			double pi_over_two = pi / 2.0;
 			angle = fmod(fabs(angle), pi_over_two) / pi_over_two;
-			double dim = smoothstep(-0.1, 0.35, angle); 
+			double dim = smoothstep(-0.1, width, angle); 
 			if (dim == 1.0)
 				return false;
 			attenuation = color(-1, -1, -1) * (1.0 - dim);
@@ -156,6 +156,7 @@ class diffuse_light_dim_edges : public material {
 
 	public:
 		shared_ptr<texture> emit;
+		double width;
 };
 
 class isotropic : public material {
