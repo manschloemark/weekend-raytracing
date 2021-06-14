@@ -161,7 +161,7 @@ hittable_list solar_system() {
 	objects.add(star_bg);
 
 	// SUN
-	auto sun_texture = make_shared<diffuse_light>(make_shared<gradient_noise_texture>(color(0.8, 0.8, 0.04), color(1.0, 0.1, 0.0), 1.0));
+	auto sun_texture = make_shared<diffuse_light_dim_edges>(make_shared<gradient_noise_texture>(color(0.8, 0.8, 0.04), color(1.0, 0.1, 0.0), 1.0), 0.8);
 	auto sun = make_shared<sphere>(point3(x_sun, 0, 0), r_sun, sun_texture);
 	objects.add(sun);
 

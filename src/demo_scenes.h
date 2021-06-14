@@ -255,9 +255,9 @@ hittable_list rocky_surface_texture_demo() {
 hittable_list texture_demo(){
 	hittable_list objects;
 
-	auto text = make_shared<gradient_noise_texture>(color(0.8, 0.8, 0.4), color(1.0, 0.1, 0.0), 2.0);
+	auto text = make_shared<rocky_surface_texture>(color(0.8, 0.8, 0.4), color(1.0, 0.1, 0.0), 2.0);
 	auto mat = make_shared<diffuse_light>(text);
-	auto test_mat = make_shared<diffuse_light_dim_edges>(text);
+	auto test_mat = make_shared<diffuse_light_dim_edges>(text, 0.4);
 	auto sph = make_shared<sphere>(point3(-2.55, 0, -15), 2.5, mat);
 	auto test_sph = make_shared<sphere>(point3(2.55, 0, -15), 2.5, test_mat);
 	objects.add(sph);
