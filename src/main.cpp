@@ -16,9 +16,9 @@
 #include "demo_scenes.h"
 // I won't be checking for _OPENMP because I know I have it.
 // But it's a good idea to think about it for the future.
-#ifndef NUM_THREADS
-#define NUM_THREADS 1
-#endif
+//#ifndef NUM_THREADS
+//#define NUM_THREADS 1
+//#endif
 
 color ray_color(const ray& r, const color& background, const hittable& world, int depth)
 {
@@ -47,14 +47,14 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
 int main(int argc, char *argv[])
 {
 	nice(1);
+
+	// Default values
 	// Image
 	auto aspect_ratio = 16.0 / 9.0;
 	int image_width = 720;
 	int image_height = static_cast<int>(image_width / aspect_ratio);
-
 	int samples_per_pixel = 100;
 	int max_depth = 50;
-
 	// World / Scene / Camera
 	point3 lookfrom(0, 0, 0);
 	point3 lookat(0, 0, 1);
@@ -64,12 +64,11 @@ int main(int argc, char *argv[])
 	auto dist_to_focus = (lookat - lookfrom).length();
 
 	hittable_list world;
-
 	color background(0, 0, 0);
 
 	timer t;
 	t.start();
-	switch(3) {
+	switch(5) {
 	case 1:
 		samples_per_pixel = 700;
 
@@ -95,8 +94,8 @@ int main(int argc, char *argv[])
 		break;
 	case 3:
 		samples_per_pixel = 600;
-		aspect_ratio = 32.0/9.0;
-		image_width = 1920 * 2;
+		aspect_ratio = 48.0/9.0;
+		image_width = 1920 * 3;
 
 		world = solar_system();
 		background = color(0, 0, 0);
@@ -158,24 +157,26 @@ int main(int argc, char *argv[])
 		break;
 	}
 	image_height = static_cast<int>(image_width / aspect_ratio);
-
+	// TODO : implement a better argument parser so I can create new arguments in the future.
+	//        (ex specify image size)
 	// LAZY COMMAND LINE ARGUMENT CHECK
 	// SINCE I ONLY HAVE ONE ARGUMENT RIGHT NOW JUST CHECK THE NUMBER OF ARGs
 	// Test render flag, auto sets samples to very small amount.
 	if (argc > 1)
 		samples_per_pixel = 50;
 
-
 	camera cam(lookfrom, lookat,
 				vup, vfov,
 				aspect_ratio,
 				aperture, dist_to_focus,
 				0.0, 1.0);
+
 	t.stop();
 	std::cerr << "It took " << t.duration_ms() << 
 				 " milliseconds to load the scene and camera.\n";
 
 	// Create bounding volume hierarchy to speed up collision detection
+	// Should I leave this here or should I let scene functions create the bvh?
 	t.start();
 	bvh_node bvh(world, 0.0, 1.0);
 	t.stop();
@@ -184,32 +185,26 @@ int main(int argc, char *argv[])
 
 	t.start();
 	std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
-
-	int horizontal_chunk_count = 32;
-	int vertical_chunk_count = 32;
-
-	int chunk_width = static_cast<int>(image_width / horizontal_chunk_count);
-	int chunk_height = static_cast<int>(image_height / vertical_chunk_count);
 	color *pixels = (color *)malloc((image_width * image_height) * sizeof(color));
 
+	int chunk_width = 32;
+	int chunk_height = 32;
+	int horizontal_chunk_count = (int)(ceil(image_width / (double)chunk_width));
+	int vertical_chunk_count = (int)(ceil(image_height / (double)chunk_height));
 	int chunks_remaining = horizontal_chunk_count * vertical_chunk_count;
-	std::cerr << "Rendering...";
-	std::cerr << chunks_remaining << " chunks.";
-	#pragma omp parallel for collapse(2) num_threads(NUM_THREADS)
+
+	std::cerr << "Rendering " << chunks_remaining << " chunks.\n\n" << std::flush;
+	//#pragma omp parallel for collapse(2) num_threads(NUM_THREADS)
 	for(int j = image_height - 1; j >= 0; j = j - chunk_height)
 	{
 		for(int i = 0; i < image_width; i = i + chunk_width)
 		{
-			for(int dj = 0; dj < chunk_height; ++dj)
+			for(int dj = 0; dj < std::min(j, chunk_height) ; ++dj)
 			{
 				int y = j - dj;
-				if (y < 0)
-					break;
-				for (int di = 0; di < chunk_width; ++di)
+				for (int di = 0; di < std::min(image_width - i, chunk_width); ++di)
 				{
 					int x = i + di;
-					if(x >= image_width)
-						break;
 					color pixel_color(0, 0, 0);
 					for (int s = 0; s < samples_per_pixel; ++s)
 					{
@@ -222,7 +217,7 @@ int main(int argc, char *argv[])
 				}
 			}
 			--chunks_remaining;
-			std::cerr << "\r" << chunks_remaining << " chunks remaining." << std::flush;
+			std::cerr << "\r" << chunks_remaining << " chunks remaining.";
 		}
 	}
 
