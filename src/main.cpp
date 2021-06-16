@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
 	timer t;
 	t.start();
-	switch(5) {
+	switch(7) {
 	case 1:
 		samples_per_pixel = 700;
 
@@ -141,6 +141,15 @@ int main(int argc, char *argv[])
 		lookfrom = point3(1920 / 2, 1080 / 2, -5);
 		lookat = point3(1920 / 2, 1080 / 2, 0);
 		dist_to_focus = 5;
+		vfov = 60.0;
+		break;
+	case 7:
+		samples_per_pixel = 50;
+		background = color(0.6, 0.8, 0.9);
+		world = triangle_demo();
+		lookfrom = point3(0, 0, 5);
+		lookat = point3(0, 0, 0);
+		dist_to_focus = 5.0;
 		vfov = 60.0;
 		break;
 	default:

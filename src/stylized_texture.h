@@ -82,21 +82,24 @@ class dry_planet_texture : public texture {
 class dotted : public texture {
 	public:
 		dotted() {}
-		dotted(shared_ptr<texture> t1, shared_ptr<texture> t2, double u_pd, double v_pd, double r) : col1(t1), col2(t2), u_period(1.0 / u_pd), v_period(1.0 / v_pd) {
+		dotted(shared_ptr<texture> t1, shared_ptr<texture> t2, double u_pd=1.0, double v_pd=1.0, double r=0.5) : col1(t1), col2(t2), u_period(1.0 / u_pd), v_period(1.0 / v_pd) {
 			radius = r * fmin(fabs(u_period), fabs(v_period));
 		}
-		dotted(color c1, color c2, double u_pd, double v_pd, double r) : col1(make_shared<solid_color>(c1)), col2(make_shared<solid_color>(c2)), u_period(1.0 / u_pd), v_period(1.0 / v_pd) {
+		dotted(color c1, color c2, double u_pd=1.0, double v_pd=1.0, double r=0.5) : col1(make_shared<solid_color>(c1)), col2(make_shared<solid_color>(c2)), u_period(1.0 / u_pd), v_period(1.0 / v_pd) {
 			radius = r * fmin(fabs(u_period), fabs(v_period));
 		}
 
 		virtual color value(double u, double v, const point3& p) const override {
-			u = (u_period <= 0.0) ? u : fmod(u, u_period);
-			v = (v_period <= 0.0) ? v : fmod(v, v_period);
-			u = 2.0 * u - u_period;
-			v = 2.0 * v - v_period;
-			double r = sqrt(u * u + v * v);
+			double x = (u_period <= 0.0) ? u : fmod(u, u_period);
+			double y = (v_period <= 0.0) ? v : fmod(v, v_period);
+			x = 2.0 * x - u_period;
+			y = 2.0 * y - v_period;
+			double r = sqrt(x * x + y * y);
 
-			return mix(col1->value(u, v, p), col2->value(u, v, p), smoothstep(radius * 0.99, radius * 1.01, r));
+			color a = col1->value(u, v, p);
+			color b = col2->value(u, v, p);
+			color result = mix(a, b, smoothstep(radius * 0.99, radius * 1.01, r));
+			return result;
 		}
 
 	public:

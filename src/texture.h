@@ -211,9 +211,12 @@ class coordinate_texture : public texture {
 };
 
 // Note I'm not sure this is quite right but it was fun to work on.
-class normal_texture : public texture {
+// This only (sort of) works for spheres. How could I make this work on any shape?
+// I mean, the easiest way would be to give textures more data... but that would be a lot of work.
+// So what else? Make a different texture for different shapes?
+class sphere_normal_texture : public texture {
     public:
-        normal_texture() {}
+        sphere_normal_texture() {}
 
         virtual color value(double u, double v, const point3& p) const override {
             double y_n = fabs(v * 2.0 - 1.0);
@@ -239,5 +242,14 @@ class normal_texture : public texture {
         }
 };
 
+class triangle_normal_texture : public texture {
+	public:
+		triangle_normal_texture() {}
+
+		virtual color value(double u, double v, const point3& p) const override {
+			color c(u, v, 1 - u - v);
+			return c;
+		}
+};
 
 #endif

@@ -161,7 +161,7 @@ inline double max(const vec3& v) {
 }
 
 inline color clamp(color& c) {
-	color r = color(fmin(1.0, fmax(0.0, c.x())), fmin(1.0, fmax(0.0, c.y())), fmin(1.0, fmax(0.0, c.z())));
+	color r = color(clamp(c.x(), 0.0, 1.0), clamp(c.y(), 0.0, 1.0), clamp(c.z(), 0.0, 1.0));
 	return r;
 }
 

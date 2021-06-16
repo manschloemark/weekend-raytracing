@@ -16,6 +16,7 @@
 #include "aarect.h"
 #include "box.h"
 #include "constant_medium.h"
+#include "triangle.h"
 #include "bvh.h"
 #include "scenes.h"
 
@@ -100,7 +101,7 @@ hittable_list my_textures() {
 
 	auto wave = make_shared<wave_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
 	auto coord = make_shared<coordinate_texture>(color(1.0, 1.0, 1.0));
-	auto norm = make_shared<normal_texture>();
+	auto norm = make_shared<sphere_normal_texture>();
 
 	objects.add(make_shared<sphere>(point3(-1, 0, -2), 0.5, make_shared<lambertian>(wave)));
 	objects.add(make_shared<sphere>(point3(1, 0, -2), 0.5, make_shared<lambertian>(coord)));
@@ -249,6 +250,21 @@ hittable_list rocky_surface_texture_demo() {
 	objects.add(rect7);
 
 
+	return objects;
+}
+
+hittable_list triangle_demo() {
+	hittable_list objects;
+
+	auto text1 = make_shared<triangle_normal_texture>();
+	auto text2 = make_shared<rocky_surface_texture>(color(1, 0, 0), color(0, 0, 1), 0.1);
+	//auto text2 = make_shared<noise_texture>(2.0);
+	auto mat1 = make_shared<lambertian>(text1);
+	auto mat2 = make_shared<lambertian>(text2);
+	auto ccw_tri = make_shared<triangle>(point3(0, 1, 0), point3(1, 0, 0), point3(-1, 0, 0), false, mat1);
+	auto cw_tri = make_shared<triangle>(point3(-1, 0, 0), point3(5, 0, 0), point3(0, -1, 0), false, mat2);
+	objects.add(ccw_tri);
+	objects.add(cw_tri);
 	return objects;
 }
 

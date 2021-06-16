@@ -30,11 +30,11 @@ class lambertian : public material {
 			auto scatter_direction = rec.normal + random_unit_vector();
 
 			// Catch degenerate scatter direction
-   	 	    if (scatter_direction.near_zero())
-	  	 		scatter_direction = rec.normal;
-					scattered = ray(rec.p, scatter_direction, r_in.time());
-					attenuation = albedo->value(rec.u, rec.v, rec.p);
-					return true;
+			if (scatter_direction.near_zero())
+				scatter_direction = rec.normal;
+			scattered = ray(rec.p, scatter_direction, r_in.time());
+			attenuation = albedo->value(rec.u, rec.v, rec.p);
+			return true;
 		}
 
 	public:
