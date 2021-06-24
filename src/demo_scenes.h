@@ -258,15 +258,79 @@ hittable_list triangle_demo() {
 
 	auto text1 = make_shared<triangle_normal_texture>();
 	auto text2 = make_shared<rocky_surface_texture>(color(1, 0, 0), color(0, 0, 1), 0.1);
-	//auto text2 = make_shared<noise_texture>(2.0);
 	auto mat1 = make_shared<lambertian>(text1);
 	auto mat2 = make_shared<lambertian>(text2);
 	auto ccw_tri = make_shared<triangle>(point3(0, 1, 0), point3(1, 0, 0), point3(-1, 0, 0), false, mat1);
 	auto cw_tri = make_shared<triangle>(point3(-1, 0, 0), point3(5, 0, 0), point3(0, -1, 0), false, mat2);
 	objects.add(ccw_tri);
 	objects.add(cw_tri);
+
+	auto text3 = make_shared<dotted>(color(0, 0, 0), color(0, 1.0, 0.3), 1.0, 1.0, .2);
+	auto mat3 = make_shared<metal>(text3, 0.2);
+	auto tri3 = make_shared<triangle>(point3(-1, -1, 3), point3(0, 2, -4), point3(2, 1, -5), false, mat3);
+	
+	objects.add(tri3);
 	return objects;
 }
+
+hittable_list random_triangles(int num_triangles=50) {
+	hittable_list objects;
+
+	for(int i = 0; i < num_triangles; ++i) {
+		double texture_value = random_double();
+		double material_value = random_double();
+		auto text = make_shared<solid_color>(color(0, 0, 0));
+		if(texture_value < 0.33) {
+			auto text = make_shared<solid_color>(vec3::random(0.0, 1.0));
+			if(material_value < 0.25) {
+				auto mat = make_shared<lambertian>(text);
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			} else if(material_value < 0.5) {
+				auto mat = make_shared<metal>(text, random_double());
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			} else if(material_value < 0.75) {
+				auto mat = make_shared<diffuse_light>(text);
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			} else {
+				auto mat = make_shared<dialectric>(random_double(0.5, 2.0));
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			}
+
+		} else if(texture_value < 0.66) {
+			auto text = make_shared<gradient_noise_texture>(vec3::random(0.0, 1.0), vec3::random(0.0, 1.0), random_double(0.1, 5.0));
+			if(material_value < 0.25) {
+				auto mat = make_shared<lambertian>(text);
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			} else if(material_value < 0.5) {
+				auto mat = make_shared<metal>(text, random_double());
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			} else if(material_value < 0.75) {
+				auto mat = make_shared<diffuse_light>(text);
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			} else {
+				auto mat = make_shared<dialectric>(random_double(0.5, 2.0));
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			}
+
+		} else {
+			auto text = make_shared<coordinate_texture>(vec3::random(0.0, 1.0));
+			if(material_value < 0.25) {
+				auto mat = make_shared<lambertian>(text);
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			} else if(material_value < 0.5) {
+				auto mat = make_shared<metal>(text, random_double());
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			} else if(material_value < 0.75) {
+				auto mat = make_shared<diffuse_light>(text);
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			} else {
+				auto mat = make_shared<dialectric>(random_double(0.5, 2.0));
+				objects.add(make_shared<triangle>(vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), vec3::random(-5.0, 5.0), false, mat));
+			}
+		}
+	}
+	return objects;
+	}
 
 hittable_list texture_demo(){
 	hittable_list objects;
@@ -281,5 +345,6 @@ hittable_list texture_demo(){
 
 	return objects;
 }
+
 #endif
 

@@ -144,12 +144,12 @@ int main(int argc, char *argv[])
 		vfov = 60.0;
 		break;
 	case 7:
-		samples_per_pixel = 50;
+		samples_per_pixel = 1000;
 		background = color(0.6, 0.8, 0.9);
-		world = triangle_demo();
-		lookfrom = point3(0, 0, 5);
+		world = random_triangles();
+		lookfrom = point3(0, 0, 10);
 		lookat = point3(0, 0, 0);
-		dist_to_focus = 5.0;
+		dist_to_focus = 8.0;
 		vfov = 60.0;
 		break;
 	default:
