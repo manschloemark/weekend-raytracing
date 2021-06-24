@@ -44,7 +44,7 @@ class lambertian : public material {
 class metal : public material {
 	public:
 		metal (const color& a, double f) : albedo(make_shared<solid_color>(a)), fuzz(f < 1 ? f : 1) {}
-		metal (shared_ptr<texture> a) : albedo(a) {}
+		metal (shared_ptr<texture> a, double f) : albedo(a), fuzz(f < 1 ? f : 1) {}
 
 		virtual bool scatter(
 				const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
