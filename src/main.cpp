@@ -178,11 +178,9 @@ int main(int argc, char *argv[])
 
 	// TODO : implement a better argument parser so I can create new arguments in the future.
 	//        (ex specify image size)
-	// LAZY COMMAND LINE ARGUMENT CHECK
-	// SINCE I ONLY HAVE ONE ARGUMENT RIGHT NOW JUST CHECK THE NUMBER OF ARGs
-	// Test render flag, auto sets samples to very small amount.
-	if (argc > 1)
-		samples_per_pixel = 50;
+	// Since I'm only implementing one command line flag it is triggered by an extra argument existing.
+	if (argc > 1) // Quick test render
+		samples_per_pixel = 30;
 
 	camera cam(lookfrom, lookat,
 				vup, vfov,
@@ -215,7 +213,6 @@ int main(int argc, char *argv[])
 	int chunks_remaining = horizontal_chunk_count * vertical_chunk_count;
 
 	std::cerr << chunks_remaining << " chunks remaining." << std::flush;
-	//#pragma omp parallel for collapse(2) num_threads(NUM_THREADS)
 	for(int j = image_height - 1; j >= 0; j = j - chunk_height)
 	{
 		for(int i = 0; i < image_width; i = i + chunk_width)
