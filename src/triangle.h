@@ -20,7 +20,8 @@ class triangle : public hittable {
 		virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override;
 		virtual bool bounding_box(double time0, double time1, aabb& output_box) const override {
 			// NOTE : the epsilon here is really only in the case where the triangle is aligned on an
-			//        axis. And I'm not sure it's necessary. Peter Shirley used it in the axis aligned rectangle.
+			//        axis. And I'm not sure it's actually necessary.
+			//        Peter Shirley used it in the axis aligned rectangle.
 			//        It ensures the aabb will never have a width of 0 on any axis.
 			vec3 epsilon = vec3(0.0001, 0.0001, 0.0001);
 			point3 min = point3(fmin(v0.x(), fmin(v1.x(), v2.x())),

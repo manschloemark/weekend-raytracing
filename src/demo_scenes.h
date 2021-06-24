@@ -332,6 +332,19 @@ hittable_list random_triangles(int num_triangles=50) {
 	return objects;
 	}
 
+hittable_list triangle_test() {
+	hittable_list objects;
+
+	objects.add(make_shared<xz_rect>(-100, 100, -400, 500, 20, make_shared<lambertian>(make_shared<image_texture>("../resources/earth.jpg"))));
+
+	objects.add(make_shared<triangle>(point3(-5, -5, -8), point3(0, 5, -3), point3(5, -5, 2), false, make_shared<metal>(color(0.8, 0.8, 0.8), 1.0)));
+
+	objects.add(make_shared<sphere>(point3(-20, 0, 3), 10, make_shared<lambertian>(color(1, 0, 0))));
+	//objects.add(make_shared<triangle>(point3(-20, -20, -40), point3(20, -20, -40), point3(0, 20, -40), false, make_shared<lambertian>(make_shared<checker_texture>(color(0, 1, 0), color(1, 0, 1), 2.0))));
+
+	return objects;
+}
+
 hittable_list texture_demo(){
 	hittable_list objects;
 

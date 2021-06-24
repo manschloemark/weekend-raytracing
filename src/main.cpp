@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
 	timer t;
 	t.start();
-	switch(7) {
+	switch(8) {
 	case 1:
 		samples_per_pixel = 700;
 
@@ -152,6 +152,15 @@ int main(int argc, char *argv[])
 		dist_to_focus = 8.0;
 		vfov = 60.0;
 		break;
+	case 8:
+		samples_per_pixel = 50;
+		background = color(0.6, 0.7, 0.9);
+		world = triangle_test();
+		lookfrom = point3(0, 0, 20);
+		lookat = point3(0, 0, -5);
+		dist_to_focus = 23.0;
+		vfov = 30.0;
+		break;
 	default:
 		samples_per_pixel = 400;
 		aspect_ratio = 1.0;
@@ -166,6 +175,7 @@ int main(int argc, char *argv[])
 		break;
 	}
 	image_height = static_cast<int>(image_width / aspect_ratio);
+
 	// TODO : implement a better argument parser so I can create new arguments in the future.
 	//        (ex specify image size)
 	// LAZY COMMAND LINE ARGUMENT CHECK
@@ -198,11 +208,13 @@ int main(int argc, char *argv[])
 
 	int chunk_width = 32;
 	int chunk_height = 32;
+
+	// This is for the progress counter
 	int horizontal_chunk_count = (int)(ceil(image_width / (double)chunk_width));
 	int vertical_chunk_count = (int)(ceil(image_height / (double)chunk_height));
 	int chunks_remaining = horizontal_chunk_count * vertical_chunk_count;
 
-	std::cerr << "Rendering " << chunks_remaining << " chunks.\n\n" << std::flush;
+	std::cerr << chunks_remaining << " chunks remaining." << std::flush;
 	//#pragma omp parallel for collapse(2) num_threads(NUM_THREADS)
 	for(int j = image_height - 1; j >= 0; j = j - chunk_height)
 	{
