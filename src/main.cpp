@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 
 	timer t;
 	t.start();
-	switch(1) {
+	switch(2) {
 	case 1:
 		samples_per_pixel = 10;
 		aspect_ratio = 16.0/9.0;
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 		vfov = 40.0;
 		break;
 	case 2:
-		samples_per_pixel = 1000;
+		samples_per_pixel = 100;
 		max_depth = 50;
 		aspect_ratio = 1.0;
 		image_width = 800;
@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
 
 	int num_pixels = image_width * image_height;
 
-#if 0 // Render by lines
+#if 0 // Render by lines (Useless with multithreading because I can't actually create enough threads)
 	std::vector<std::future<pixel_data>> pixel_futures;
 	std::cerr << "Rendering...\n";
 	for(int y = image_height - 1; y >= 0; --y)
@@ -276,7 +276,8 @@ int main(int argc, char *argv[])
 	//         So, maybe there's a better way to implement multithreading here. Look into it.
 	std::vector<std::future<std::vector<pixel_data>>> pixel_futures;
 	// In this implementation I will make one chunk for each available core
-	auto thread_count = std::thread::hardware_concurrency();
+	// TODO :: set thread count by command line argument
+	auto thread_count = std::thread::hardware_concurrency() / 2;
 
 	// Determine how many chunks should be along the x and y axis
 	// while keeping the chunks as square as possible
@@ -310,8 +311,8 @@ int main(int argc, char *argv[])
 	int chunk_width = image_width / horizontal_chunks;
 	int extra_width = image_width % horizontal_chunks;
 
-#if 1 // Debug prints, maybe learn how to log stuff in files or something.
-	std::cerr << "DEBUG Chunk size vs image size\n";
+#if 1 // Print debug info, maybe learn how to log stuff in files or something, and turn it on from the CL
+	std::cerr << "DEBUG CHUNK INFO\n";
 	std::cerr << "# THREADS=" << thread_count << "\n";
 	std::cerr << "H_CHUNKS=" << horizontal_chunks << " // V_CHUNKS=" << vertical_chunks << " // TOTAL=" << num_chunks << "\n";
 	std::cerr << "CHUNK DIMENSIONS=" << chunk_width << "px X " << chunk_height << "px\n";
