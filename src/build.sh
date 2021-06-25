@@ -2,15 +2,10 @@
 # It would be better if I actually looked at the arguments and identified them.
 if [[ -n $1 ]]
 then filename=$1
-	if [[ -n $2 ]]
-	then numprocs="-DNUM_THREADS=$2"
-	else numprocs=""
-	fi
 else
 	filename=$(git branch --show-current).exe
-	numprocs=""
 fi
 
 pushd ../build
-g++ ../src/main.cpp -o $filename -fopenmp $numprocs
+g++ -pthread ../src/main.cpp -o $filename
 popd
