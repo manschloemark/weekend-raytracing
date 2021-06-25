@@ -1,6 +1,11 @@
 #include <iostream>
 #include <unistd.h>
 
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <future>
+
 #include "common.h"
 #include "color.h"
 #include "hittable_list.h"
@@ -14,11 +19,6 @@
 // My files
 #include "timer.h"
 #include "demo_scenes.h"
-// I won't be checking for _OPENMP because I know I have it.
-// But it's a good idea to think about it for the future.
-//#ifndef NUM_THREADS
-//#define NUM_THREADS 1
-//#endif
 
 color ray_color(const ray& r, const color& background, const hittable& world, int depth)
 {
@@ -68,9 +68,9 @@ int main(int argc, char *argv[])
 
 	timer t;
 	t.start();
-	switch(8) {
+	switch(1) {
 	case 1:
-		samples_per_pixel = 700;
+		samples_per_pixel = 10;
 
 		world = book1_final();
 		background = color(0.7, 0.8, 1.0);
@@ -204,15 +204,35 @@ int main(int argc, char *argv[])
 	std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 	color *pixels = (color *)malloc((image_width * image_height) * sizeof(color));
 
+#if 1 // Render by lines
+	std::cerr << "Rendering...\n";
+	for(int y = image_height - 1; y >= 0; --y)
+	{
+		std::cerr << "\r" << y << " lines remaining." << std::flush;
+		for(int x = 0; x < image_width; ++x)
+		{
+			color pixel_color(0, 0, 0);
+			for(int s = 0; s < samples_per_pixel; ++s)
+			{
+				auto u = (x + random_double()) / (image_width - 1);
+				auto v = (y + random_double()) / (image_height - 1);
+				ray r = cam.get_ray(u, v);
+				pixel_color += ray_color(r, background, bvh, max_depth);
+			}
+			pixel_color = normalize(pixel_color, samples_per_pixel);
+			pixels[(y * image_width) + x] = pixel_color;
+		}
+	}
+#else // Render by chunks
 	int chunk_width = 32;
 	int chunk_height = 32;
-
-	// This is for the progress counter
+	// This is for the chunk progress counter
 	int horizontal_chunk_count = (int)(ceil(image_width / (double)chunk_width));
 	int vertical_chunk_count = (int)(ceil(image_height / (double)chunk_height));
 	int chunks_remaining = horizontal_chunk_count * vertical_chunk_count;
-
 	std::cerr << chunks_remaining << " chunks remaining." << std::flush;
+
+	std::mutex mutex;
 	for(int j = image_height - 1; j >= 0; j = j - chunk_height)
 	{
 		for(int i = 0; i < image_width; i = i + chunk_width)
@@ -231,6 +251,7 @@ int main(int argc, char *argv[])
 						ray r = cam.get_ray(u, v);
 						pixel_color += ray_color(r, background, bvh, max_depth);
 					}
+					pixel_color = normalize(pixel_color, samples_per_pixel);
 					pixels[(y * image_width) + x] = pixel_color;
 				}
 			}
@@ -238,6 +259,7 @@ int main(int argc, char *argv[])
 			std::cerr << "\r" << chunks_remaining << " chunks remaining.";
 		}
 	}
+#endif
 
 	std::cerr << "Writing...";
 	for(int j = image_height - 1; j >= 0; --j)
