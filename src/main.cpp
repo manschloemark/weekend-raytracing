@@ -53,7 +53,7 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
 
 int main(int argc, char *argv[])
 {
-	//nice(1);
+	nice(1);
 
 	// Default values
 	// Image
@@ -77,9 +77,9 @@ int main(int argc, char *argv[])
 	t.start();
 	switch(1) {
 	case 1:
-		samples_per_pixel = 1000;
-		aspect_ratio = 1.0;
-		image_width = 50;
+		samples_per_pixel = 10;
+		aspect_ratio = 16.0/9.0;
+		image_width = 720;
 
 		world = book1_final();
 		background = color(0.7, 0.8, 1.0);
@@ -215,11 +215,11 @@ int main(int argc, char *argv[])
 
 	std::mutex mutex;
 	std::condition_variable pixels_cv;
-	std::vector<std::future<pixel_data>> pixel_futures;
 
 	int num_pixels = image_width * image_height;
 
-#if 1 // Render by lines
+#if 0 // Render by lines
+	std::vector<std::future<pixel_data>> pixel_futures;
 	std::cerr << "Rendering...\n";
 	for(int y = image_height - 1; y >= 0; --y)
 	{
@@ -268,39 +268,125 @@ int main(int argc, char *argv[])
 		pixels[pixel.index] = pixel.col;
 	}
 #else // Render by chunks
-	int chunk_width = 32;
-	int chunk_height = 32;
-	// This is for the chunk progress counter
-	int horizontal_chunk_count = (int)(ceil(image_width / (double)chunk_width));
-	int vertical_chunk_count = (int)(ceil(image_height / (double)chunk_height));
-	int chunks_remaining = horizontal_chunk_count * vertical_chunk_count;
-	std::cerr << chunks_remaining << " chunks remaining." << std::flush;
+	// NOTE :: this version has a vector of futures of type vector of pixel_data...
+	//         this feels like it will be a bit slower than the original version. But I'll test it.
+	//         I have to do this because each chunk is rendering multiple pixels in it's own thread,
+	//         which means async() cannot return each pixel - it has to return all of the pixels
+	//         at once.
+	//         So, maybe there's a better way to implement multithreading here. Look into it.
+	std::vector<std::future<std::vector<pixel_data>>> pixel_futures;
+	// In this implementation I will make one chunk for each available core
+	auto thread_count = std::thread::hardware_concurrency();
 
-	std::mutex mutex;
-	for(int j = image_height - 1; j >= 0; j = j - chunk_height)
+	// Determine how many chunks should be along the x and y axis
+	// while keeping the chunks as square as possible
+	int a = sqrt(thread_count);
+	int b;
+	while(a != 1)
 	{
-		for(int i = 0; i < image_width; i = i + chunk_width)
+		b = thread_count / a;
+		if(a * b == thread_count)
+			break;
+		--a;
+	}
+	int vertical_chunks, horizontal_chunks;
+	// I wonder if this will help with caching? IDK
+	if(image_height > image_width)
+	{
+		vertical_chunks = b;
+		horizontal_chunks = a;
+	}
+	else
+	{
+		vertical_chunks = a;
+		horizontal_chunks = b;
+	}
+
+	int num_chunks = vertical_chunks * horizontal_chunks;
+
+	int chunk_height = image_height / vertical_chunks;
+	int extra_height = image_height % vertical_chunks;
+
+	int chunk_width = image_width / horizontal_chunks;
+	int extra_width = image_width % horizontal_chunks;
+
+#if 1 // Debug prints, maybe learn how to log stuff in files or something.
+	std::cerr << "DEBUG Chunk size vs image size\n";
+	std::cerr << "# THREADS=" << thread_count << "\n";
+	std::cerr << "H_CHUNKS=" << horizontal_chunks << " // V_CHUNKS=" << vertical_chunks << " // TOTAL=" << num_chunks << "\n";
+	std::cerr << "CHUNK DIMENSIONS=" << chunk_width << "px X " << chunk_height << "px\n";
+	std::cerr << "EXTRA HORIZONTAL PIXELS=" << extra_width << " // EXTRA VERTICAL PIXELS=" << extra_height << "\n";
+	std::cerr << "PIXELS PER CHUNK=" << chunk_width * chunk_height << "\n";
+	std::cerr << "TOTAL PIXELS IN CHUNKS=" << (chunk_width * chunk_height) * num_chunks << "\n";
+	std::cerr << "PIXELS IN IMAGE=" << image_height * image_width << "\n";
+#endif
+
+	int h = chunk_height;
+	int w = chunk_width;
+	//for(int j = image_height - 1; j >= 0; j = j - h)
+	int j = image_height - 1;
+	while(j >= 0)
+	{
+		h = (j < image_height - 1) ? chunk_height : chunk_height + extra_height;
+		//for(int i = 0; i < image_width; i = i + w)
+		int i = 0;
+		while(i < image_width)
 		{
-			for(int dj = 0; dj < std::min(j, chunk_height) ; ++dj)
-			{
-				int y = j - dj;
-				for (int di = 0; di < std::min(image_width - i, chunk_width); ++di)
-				{
-					int x = i + di;
-					color pixel_color(0, 0, 0);
-					for (int s = 0; s < samples_per_pixel; ++s)
-					{
-						auto u = double(x + random_double()) / (image_width - 1);
-						auto v = double(y + random_double()) / (image_height - 1);
-						ray r = cam.get_ray(u, v);
-						pixel_color += ray_color(r, background, bvh, max_depth);
-					}
-					pixel_color = normalize(pixel_color, samples_per_pixel);
-					pixels[(y * image_width) + x] = pixel_color;
+			w = (i > 0) ? chunk_width : chunk_width + extra_width;
+			// Make a future for each chunk
+			auto future = std::async(std::launch::async,// | std::launch::deferred,
+			[&cam, &bvh, &background, &max_depth, &samples_per_pixel,
+			i, j, w, h, image_width, image_height, &pixels_cv]() -> 
+			std::vector<pixel_data> {
+						std::vector<pixel_data> chunk_pixels;
+						for(int dj = 0; dj < h; ++dj)
+						{
+							int y = j - dj;
+							for (int di = 0; di < w; ++di)
+							{
+								int x = i + di;
+								unsigned int index = (y * image_width) + x;
+								color pixel_color(0, 0, 0);
+								for (int s = 0; s < samples_per_pixel; ++s)
+								{
+									auto u = double(x + random_double()) / (image_width - 1);
+									auto v = double(y + random_double()) / (image_height - 1);
+									ray r = cam.get_ray(u, v);
+									pixel_color += ray_color(r, background, bvh, max_depth);
+								}
+								pixel_data pixel = {};
+								pixel.col = normalize(pixel_color, samples_per_pixel);
+								pixel.index = index;
+								chunk_pixels.push_back(pixel);
+							}
+						}
+						return chunk_pixels;
 				}
+			);
+			{
+				std::lock_guard<std::mutex> lock(mutex);
+				pixel_futures.push_back(std::move(future));
 			}
-			--chunks_remaining;
-			std::cerr << "\r" << chunks_remaining << " chunks remaining.";
+			i += w;
+		}
+		j -= h;
+	}
+
+	// Wait until each chunk has been created
+	{
+		std::unique_lock<std::mutex> lock(mutex);
+		pixels_cv.wait(lock, [&pixel_futures, &num_chunks] { 
+							return pixel_futures.size() >= num_chunks;
+		});
+	}
+
+	// Get each pixel from the vector of futures and order them
+	for(std::future<std::vector<pixel_data>>& ch : pixel_futures)
+	{
+		std::vector<pixel_data> chunk = ch.get();
+		for(pixel_data& pd : chunk)
+		{
+		pixels[pd.index] = pd.col;
 		}
 	}
 #endif
