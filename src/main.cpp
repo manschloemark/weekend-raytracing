@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unistd.h>
 
+#include <atomic>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -19,6 +20,12 @@
 // My files
 #include "timer.h"
 #include "demo_scenes.h"
+
+struct pixel_data
+{
+	color col;
+	unsigned int index;
+};
 
 color ray_color(const ray& r, const color& background, const hittable& world, int depth)
 {
@@ -46,7 +53,7 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
 
 int main(int argc, char *argv[])
 {
-	nice(1);
+	//nice(1);
 
 	// Default values
 	// Image
@@ -70,7 +77,9 @@ int main(int argc, char *argv[])
 	t.start();
 	switch(1) {
 	case 1:
-		samples_per_pixel = 10;
+		samples_per_pixel = 1000;
+		aspect_ratio = 1.0;
+		image_width = 50;
 
 		world = book1_final();
 		background = color(0.7, 0.8, 1.0);
@@ -204,6 +213,12 @@ int main(int argc, char *argv[])
 	std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 	color *pixels = (color *)malloc((image_width * image_height) * sizeof(color));
 
+	std::mutex mutex;
+	std::condition_variable pixels_cv;
+	std::vector<std::future<pixel_data>> pixel_futures;
+
+	int num_pixels = image_width * image_height;
+
 #if 1 // Render by lines
 	std::cerr << "Rendering...\n";
 	for(int y = image_height - 1; y >= 0; --y)
@@ -211,17 +226,46 @@ int main(int argc, char *argv[])
 		std::cerr << "\r" << y << " lines remaining." << std::flush;
 		for(int x = 0; x < image_width; ++x)
 		{
-			color pixel_color(0, 0, 0);
-			for(int s = 0; s < samples_per_pixel; ++s)
+		// Make a future for each pixel
+			auto future = std::async(std::launch::async,// | std::launch::deferred,
+			[&cam, &bvh, &background, &max_depth, &samples_per_pixel,
+			x, y, image_width, image_height, &pixels_cv]() -> pixel_data {
+						const unsigned int index = (y * image_width) + x;
+						color pixel_color(0, 0, 0);
+						for(int s = 0; s < samples_per_pixel; ++s)
+						{
+							float u = float(x + random_double()) / float(image_width - 1);
+							float v = float(y + random_double()) / float(image_height - 1);
+							ray r = cam.get_ray(u, v);
+							pixel_color += ray_color(r, background, bvh, max_depth);
+						}
+						pixel_data pixel = {};
+						pixel.col = normalize(pixel_color, samples_per_pixel);
+						pixel.index = index;
+						return pixel;
+					}
+			);
+
 			{
-				auto u = (x + random_double()) / (image_width - 1);
-				auto v = (y + random_double()) / (image_height - 1);
-				ray r = cam.get_ray(u, v);
-				pixel_color += ray_color(r, background, bvh, max_depth);
+				std::lock_guard<std::mutex> lock(mutex);
+				pixel_futures.push_back(std::move(future));
 			}
-			pixel_color = normalize(pixel_color, samples_per_pixel);
-			pixels[(y * image_width) + x] = pixel_color;
 		}
+	}
+
+	// Wait until each pixel has been created
+	{
+		std::unique_lock<std::mutex> lock(mutex);
+		pixels_cv.wait(lock, [&pixel_futures, &num_pixels] { 
+							return pixel_futures.size() == num_pixels;
+		});
+	}
+
+	// Get each pixel from the vector of futures and order them
+	for(std::future<pixel_data>& pd : pixel_futures)
+	{
+		pixel_data pixel = pd.get();
+		pixels[pixel.index] = pixel.col;
 	}
 #else // Render by chunks
 	int chunk_width = 32;
