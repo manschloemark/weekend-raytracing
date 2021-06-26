@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 
 	timer t;
 	t.start();
-	switch(2) {
+	switch(-1) {
 	case 1:
 		samples_per_pixel = 10;
 		aspect_ratio = 16.0/9.0;
@@ -103,8 +103,8 @@ int main(int argc, char *argv[])
 		break;
 	case 3:
 		samples_per_pixel = 600;
-		aspect_ratio = 48.0/9.0;
-		image_width = 1920 * 3;
+		aspect_ratio = 16.0/9.0;
+		image_width = 1920;
 
 		world = solar_system();
 		background = color(0, 0, 0);
@@ -171,9 +171,9 @@ int main(int argc, char *argv[])
 		vfov = 30.0;
 		break;
 	default:
-		samples_per_pixel = 400;
+		samples_per_pixel = 1000;
 		aspect_ratio = 1.0;
-		image_width = 400;
+		image_width = 480;
 
 		world = cornell_box();
 		background = color(0, 0, 0);
