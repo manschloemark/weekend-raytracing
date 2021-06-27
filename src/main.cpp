@@ -7,6 +7,8 @@
 #include <condition_variable>
 #include <future>
 
+#include <argp.h>
+
 #include "common.h"
 #include "color.h"
 #include "hittable_list.h"
@@ -21,6 +23,84 @@
 #include "timer.h"
 #include "demo_scenes.h"
 
+const char *argp_program_version = "weekend-raytracing 0.2.2";
+const char *argp_program_bug_address = "<markofwisdumb@gmail.com>";
+static char doc[] = "Weekend Raytracing -- A personal ray-tracer based off of Peter Shirley's _Ray Tracing in One Weekend_ book series.";
+
+static struct argp_option options[] = {
+	// Output options
+	// TODO :: specify image files of various formats instead of only using PPM and bash redirect
+	//{"output", 'o', "FILE", 0, "The file to save the resulting image to. NOTE: should be .ppm format in this version"},
+	{"width", 'w', "WIDTH", 0, "Width of output image in pixels.", 0},
+	{"height", 'h', "HEIGHT", 0, "Height of output image in pixels.", 0},
+	// Render options
+	// TODO :: specify scene files insead of hardcoded functions
+	{"scene", 's', "SCENE", 0, "Which scene to generate -- SCENE is an integer used in a switch statement.", 1},
+	// Performance related
+	{"num-samples", 'n', "N_SAMPLES", 0, "Take a sample from each pixel N_SAMPLES times", 2},
+	{"max-depth", 'd', "MAX_DEPTH", 0, "MAX_DEPTH is the number of times a ray can be reflected.", 2},
+	{"num-threads", 't', "N_THREADS", 0, "Create N_THREADS threads to render the image in parallel. Default is estimated number of cores.", 2},
+	// TODO :: should this be a runtime flag or a compile time flag? 
+	//         I guess I can try both and see how much it changes the performance. Or not... do I really need the other algorithm?
+	// {"moller-trumbore", 'm', 0, 0, "Flag determining which triangle hit algorithm to use -- Moller Trombore or the other one... (what's it called?)", 1},
+	// Debugging related
+	{"verbose", 'v', 0, 0, "Verbose output. Prints extra info while rendering.", 3},
+	// TODO :: implement proper logging capability.
+	// {"logfile",         'l', 0, 0, "The file to which log messages will be sent", 2},
+	{0} // This needs to be here to argp knows where the options list ends.
+};
+
+struct arguments
+{
+	int scene;
+	int image_width, image_height;
+	int samples_per_pixel, max_depth, num_threads;
+	int verbose;
+};
+
+static error_t parse_opt(int key, char *arg, argp_state *state)
+{
+	arguments *args = (arguments *)state->input;
+
+	// TODO :: some of my options need values -- how do I properly retrieve them? What if they are ints instead of chars? Do I need to parse them?
+	switch (key)
+	{
+	case 's':
+		args->scene = atoi(arg);
+		break;
+	case 'w':
+		args->image_width = atoi(arg);
+		break;
+	case 'h':
+		args->image_height = atoi(arg);
+		break;
+	case 'n':
+		args->samples_per_pixel = atoi(arg);
+		break;
+	case 'd':
+		args->max_depth = atoi(arg);
+		break;
+	case 't':
+		args->num_threads = atoi(arg);
+		break;
+	case 'v':
+		args->verbose = 1;
+		break;
+	/* Removing this for now because I think it should be a compiler flag instead...
+	case 'm':
+		args->use_mt_alg = atoi(arg);
+		break;
+	*/
+	default:
+		return ARGP_ERR_UNKNOWN;
+		break;
+	}
+	return 0;
+}
+
+static struct argp argp = {options, parse_opt, 0, doc};
+
+// This struct is used for multithreading
 struct pixel_data
 {
 	color col;
@@ -55,13 +135,25 @@ int main(int argc, char *argv[])
 {
 	nice(1);
 
+	// Set defaults before parsing arguments
+	arguments arguments = {0};
+
+	arguments.image_width = 480;
+	arguments.image_height = 480;
+	arguments.scene = -1;
+	arguments.samples_per_pixel = 100;
+	arguments.max_depth = 50;
+	arguments.num_threads = std::thread::hardware_concurrency() / 2;
+
+	argp_parse(&argp, argc, argv, 0, 0, &arguments);
+
+	// Store values from arguments in primitives so I don't have to refer to arguments all the time
+	// (((Is this dumb?)))
+	int samples_per_pixel = arguments.samples_per_pixel;
+	int max_depth = arguments.max_depth;
+	int image_width = arguments.image_width;
+	int image_height = arguments.image_height;
 	// Default values
-	// Image
-	auto aspect_ratio = 16.0 / 9.0;
-	int image_width = 720;
-	int image_height = static_cast<int>(image_width / aspect_ratio);
-	int samples_per_pixel = 100;
-	int max_depth = 50;
 	// World / Scene / Camera
 	point3 lookfrom(0, 0, 0);
 	point3 lookat(0, 0, 1);
@@ -75,12 +167,8 @@ int main(int argc, char *argv[])
 
 	timer t;
 	t.start();
-	switch(-1) {
+	switch(arguments.scene) {
 	case 1:
-		samples_per_pixel = 10;
-		aspect_ratio = 16.0/9.0;
-		image_width = 720;
-
 		world = book1_final();
 		background = color(0.7, 0.8, 1.0);
 
@@ -89,11 +177,6 @@ int main(int argc, char *argv[])
 		vfov = 40.0;
 		break;
 	case 2:
-		samples_per_pixel = 100;
-		max_depth = 50;
-		aspect_ratio = 1.0;
-		image_width = 800;
-
 		world = book2_final();
 		background = color(0, 0, 0);
 
@@ -102,10 +185,6 @@ int main(int argc, char *argv[])
 		vfov = 40.0;
 		break;
 	case 3:
-		samples_per_pixel = 600;
-		aspect_ratio = 16.0/9.0;
-		image_width = 1920;
-
 		world = solar_system();
 		background = color(0, 0, 0);
 		lookfrom = point3(100, 0, 100);
@@ -116,7 +195,6 @@ int main(int argc, char *argv[])
 		dist_to_focus = 100;
 		break;
 	case 4:
-		samples_per_pixel = 300;
 
 		world = colored_noise_demo();
 		background = color(0.5, 0.8, 0.9);
@@ -126,10 +204,6 @@ int main(int argc, char *argv[])
 		vfov = 45.0;
 		break;
 	case 5:
-		samples_per_pixel = 50;
-		aspect_ratio = 16.0 / 9.0;
-		image_width = 720;
-
 		world = texture_demo();
 		background = color(0.7, 0.8, 0.9);
 
@@ -141,10 +215,6 @@ int main(int argc, char *argv[])
 
 		break;
 	case 6:
-		samples_per_pixel = 250;
-		aspect_ratio = 16.0 / 9.0;
-		image_width = 1920;
-
 		world = rocky_surface_texture_demo();
 		background = color(1, 1, 1);
 		lookfrom = point3(1920 / 2, 1080 / 2, -5);
@@ -153,7 +223,6 @@ int main(int argc, char *argv[])
 		vfov = 60.0;
 		break;
 	case 7:
-		samples_per_pixel = 1000;
 		background = color(0.6, 0.8, 0.9);
 		world = random_triangles();
 		lookfrom = point3(0, 0, 10);
@@ -162,7 +231,6 @@ int main(int argc, char *argv[])
 		vfov = 60.0;
 		break;
 	case 8:
-		samples_per_pixel = 50;
 		background = color(0.6, 0.7, 0.9);
 		world = triangle_test();
 		lookfrom = point3(0, 0, 20);
@@ -171,10 +239,6 @@ int main(int argc, char *argv[])
 		vfov = 30.0;
 		break;
 	default:
-		samples_per_pixel = 1000;
-		aspect_ratio = 1.0;
-		image_width = 480;
-
 		world = cornell_box();
 		background = color(0, 0, 0);
 
@@ -183,13 +247,8 @@ int main(int argc, char *argv[])
 		vfov = 40.0;
 		break;
 	}
-	image_height = static_cast<int>(image_width / aspect_ratio);
 
-	// TODO : implement a better argument parser so I can create new arguments in the future.
-	//        (ex specify image size)
-	// Since I'm only implementing one command line flag it is triggered by an extra argument existing.
-	if (argc > 1) // Quick test render
-		samples_per_pixel = 30;
+	auto aspect_ratio = (double)image_width / (double)image_height;
 
 	camera cam(lookfrom, lookat,
 				vup, vfov,
@@ -271,14 +330,12 @@ int main(int argc, char *argv[])
 	// NOTE :: this version has a vector of futures of type vector of pixel_data...
 	//         this feels like it will be a bit slower than the original version. But I'll test it.
 	//         I have to do this because each chunk is rendering multiple pixels in it's own thread,
-	//         which means async() cannot return each pixel - it has to return all of the pixels
+	//         which means async() cannot return each pixel individually - it has to return all of the pixels
 	//         at once.
-	//         So, maybe there's a better way to implement multithreading here. Look into it.
+	//         Maybe there's a better way to implement multithreading here. Think about it.
 	std::vector<std::future<std::vector<pixel_data>>> pixel_futures;
-	// In this implementation I will make one chunk for each available core
-	// TODO :: set thread count by command line argument
-	auto thread_count = std::thread::hardware_concurrency() / 2;
 
+	int thread_count = arguments.num_threads;
 	// Determine how many chunks should be along the x and y axis
 	// while keeping the chunks as square as possible
 	int a = sqrt(thread_count);
@@ -302,25 +359,23 @@ int main(int argc, char *argv[])
 		vertical_chunks = a;
 		horizontal_chunks = b;
 	}
-
 	int num_chunks = vertical_chunks * horizontal_chunks;
-
 	int chunk_height = image_height / vertical_chunks;
 	int extra_height = image_height % vertical_chunks;
-
 	int chunk_width = image_width / horizontal_chunks;
 	int extra_width = image_width % horizontal_chunks;
 
-#if 1 // Print debug info, maybe learn how to log stuff in files or something, and turn it on from the CL
-	std::cerr << "DEBUG CHUNK INFO\n";
-	std::cerr << "# THREADS=" << thread_count << "\n";
-	std::cerr << "H_CHUNKS=" << horizontal_chunks << " // V_CHUNKS=" << vertical_chunks << " // TOTAL=" << num_chunks << "\n";
-	std::cerr << "CHUNK DIMENSIONS=" << chunk_width << "px X " << chunk_height << "px\n";
-	std::cerr << "EXTRA HORIZONTAL PIXELS=" << extra_width << " // EXTRA VERTICAL PIXELS=" << extra_height << "\n";
-	std::cerr << "PIXELS PER CHUNK=" << chunk_width * chunk_height << "\n";
-	std::cerr << "TOTAL PIXELS IN CHUNKS=" << (chunk_width * chunk_height) * num_chunks << "\n";
-	std::cerr << "PIXELS IN IMAGE=" << image_height * image_width << "\n";
-#endif
+	if (arguments.verbose != 0)
+	{
+		std::cerr << "DEBUG CHUNK INFO\n";
+		std::cerr << "# THREADS=" << thread_count << "\n";
+		std::cerr << "H_CHUNKS=" << horizontal_chunks << " // V_CHUNKS=" << vertical_chunks << " // TOTAL=" << num_chunks << "\n";
+		std::cerr << "CHUNK DIMENSIONS=" << chunk_width << "px X " << chunk_height << "px\n";
+		std::cerr << "EXTRA HORIZONTAL PIXELS=" << extra_width << " // EXTRA VERTICAL PIXELS=" << extra_height << "\n";
+		std::cerr << "PIXELS PER CHUNK=" << chunk_width * chunk_height << "\n";
+		std::cerr << "TOTAL PIXELS IN CHUNKS=" << (chunk_width * chunk_height) * num_chunks << "\n";
+		std::cerr << "PIXELS IN IMAGE=" << image_height * image_width << "\n";
+	}
 
 	int h = chunk_height;
 	int w = chunk_width;
