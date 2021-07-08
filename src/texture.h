@@ -101,6 +101,32 @@ class checker_texture : public texture {
         shared_ptr<texture> even;
 };
 
+// This is a copy of the checker texture from Peter Shirley's book
+// but it uses the uv coordinates instead of xyz so that a flat surface will still have tiles.
+class uv_checker_texture : public texture {
+    public:
+        uv_checker_texture(shared_ptr<texture> _even, shared_ptr<texture> _odd, double freq = 10.0) : even(_even), odd(_odd), box_frequency(freq) {}
+
+        uv_checker_texture(color c1, color c2, double freq = 10.0) : even(make_shared<solid_color>(c1)), odd(make_shared<solid_color>(c2)), box_frequency(freq) {}
+
+        virtual color value(double u, double v, const point3& p) const override {
+            auto sines = sin(box_frequency * u) * sin(box_frequency * v);
+            if (sines < 0)
+            {
+                return odd->value(u, v, p);
+            }
+            else
+            {
+                return even->value(u, v, p);
+            } 
+        }
+
+    public:
+        double box_frequency;
+        shared_ptr<texture> odd;
+        shared_ptr<texture> even;
+};
+
 class noise_texture : public texture {
     public:
         noise_texture() {}

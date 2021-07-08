@@ -359,5 +359,131 @@ hittable_list texture_demo(){
 	return objects;
 }
 
+hittable_list glass_and_shadows() {
+	hittable_list objects;
+
+	auto light = make_shared<diffuse_light>(color(4, 4, 4));
+	//auto light_triangle = make_shared<triangle>(point3(-4, -2, 2), point3(4, -2, 2), point3(0, 2, 2), false, light);
+	auto light_wall = make_shared<xy_rect>(-20, 20, -20, 20, 30, light);
+
+	//auto box_material = make_shared<metal>(color(0.9, 0.9, 0.9), 1.0);
+	auto box_material = make_shared<lambertian>(color(0.4, 0.4, 0.4));
+	auto back_material = make_shared<lambertian>(make_shared<rocky_surface_texture>(color(0.2, 0.2, 0.6), color(0, 0, 0), 4.0));
+	//auto back_material = make_shared<lambertian>(make_shared<image_texture>("../resources/earth.jpg"));
+	//auto walls = make_shared<box>(point3(-50, -8, 50), point3(50, 25, -30), box_material);
+	auto left_wall = make_shared<yz_rect>(-50, 50, -50, 50, -50, box_material);
+	auto right_wall = make_shared<yz_rect>(-50, 50, -50, 50, 50, box_material);
+	auto back_wall = make_shared<xy_rect>(-50, 50, -50, 50, -25, back_material);
+
+	auto metal_sphere = make_shared<sphere>(point3(-10, 0, -10), 2, make_shared<metal>(color(0.55, 0.55, 0.55), 0.0));
+
+	auto glass_ball = make_shared<sphere>(point3(0, 0, -10), 2, make_shared<dialectric>(1.52));
+
+	auto water_ball = make_shared<sphere>(point3(10, 0, -10), 2, make_shared<dialectric>(1.333));
+
+	//objects.add(light_triangle);
+	//objects.add(walls);
+	//objects.add(light_sphere);
+	objects.add(light_wall);
+	objects.add(left_wall);
+	objects.add(right_wall);
+	objects.add(back_wall);
+	objects.add(metal_sphere);
+	objects.add(glass_ball);
+	objects.add(water_ball);
+
+	return objects;
+}
+
+hittable_list ultimate_demo() {
+	// This is going to be a 4x4 grid showing off the 4 main hittable shapes
+	// and different materials.
+	// [Lambertian, Metal, Dialectric, Isotropic(maybe not if it takes too long)
+	// |  S  S  S  S |
+	// |  T  T  T  T |
+	// |  R  R  R  R |
+	// |  C  C  C  C |
+	hittable_list objects;
+
+	// Light
+	auto light = make_shared<triangle>(point3(50, 0, 150), point3(150, 0, 200), point3(110, 100, 150), false, make_shared<diffuse_light>(color(5, 5, 5)));
+	objects.add(light);
+	// Ground
+	auto ground = make_shared<xz_rect>(-65, 65, -65, 65, 0, make_shared<metal>(make_shared<uv_checker_texture>(make_shared<colored_turbulent_noise>(color(0.33, 0.54, 0.85), 0.5), make_shared<colored_turbulent_noise>(color(1.0, 1.0, 1.0), 0.5), 50.0), 0.5));
+	objects.add(ground);
+
+	auto left_wall = make_shared<yz_rect>(0, 50, -50, 50, -50, make_shared<metal>(color(0.8, 0.8, 0.8), 0.0));
+	objects.add(left_wall);
+	auto right_wall = make_shared<xy_rect>(-50, 50, 0, 50, -50, make_shared<metal>(color(0.8, 0.8, 0.8), 0.0));
+	objects.add(right_wall);
+
+	double x = -45.0;
+	double z = -45.0;
+	double y = 10.0;
+	double r = 10.0;
+	// Spheres
+	auto lambertian_sphere = make_shared<sphere>(point3(x, y, z), r, make_shared<lambertian>(color(0.8, 0.6, 0.6)));
+	objects.add(lambertian_sphere);
+	x += 30.0;
+	auto metal_sphere = make_shared<sphere>(point3(x, y, z), r, make_shared<metal>(color(0.6, 0.8, 0.8), 0.1));
+	objects.add(metal_sphere);
+	x+= 30.0;
+	auto glass_sphere = make_shared<sphere>(point3(x, y, z), r, make_shared<dialectric>(1.67));
+	objects.add(glass_sphere);
+	x+= 30.0;
+	auto gas_sphere = make_shared<constant_medium>(make_shared<sphere>(point3(x, y, z), r, make_shared<isotropic>(color(1.0, 1.0, 1.0))), 0.01, color(0.2, 1, 0.2));
+	objects.add(gas_sphere);
+
+	x = -45.0;
+	z += 30.0;
+
+	// Triangles
+	// Gas triangle doesn't really appear visible so I will use different textures instead
+	//auto gas_triangle = make_shared<constant_medium>(make_shared<triangle>(point3(-r, -r, 0), point3(r,-r, 0), point3(0, r, 0), false, make_shared<lambertian>(color(1, 1, 1))), 0.0001, color(0.55, 0.66, 0.11));
+	auto noise_triangle = make_shared<triangle>(point3(-r, -r, 0), point3(r,-r, 0), point3(0, r, 0), false, make_shared<metal>(make_shared<gradient_noise_texture>(color::random(), color::random(), 8.0), 0.5));
+	objects.add(make_shared<translate>(make_shared<rotate_y>(noise_triangle, 45.0), vec3(x, y, z)));
+	x += 30.0;
+	auto lambertian_triangle = make_shared<triangle>(point3(-r, -r, 0), point3(r, -r, 0), point3(0, r, 0), false, make_shared<lambertian>(color(0.2, 0.55, 0.72)));
+	objects.add(make_shared<translate>(make_shared<rotate_y>(lambertian_triangle, 45.0), vec3(x, y, z)));
+	x += 30.0;
+	auto metal_triangle = make_shared<triangle>(point3(-r, -r, 0), point3(r, -r, 0), point3(0, r, 0), false, make_shared<metal>(color(0.6, 0.42, 0.32), 0.1));
+	objects.add(make_shared<translate>(make_shared<rotate_y>(metal_triangle, 45.0), vec3(x, y, z)));
+	x += 30.0;
+	auto glass_triangle = make_shared<triangle>(point3(-r, -r, 0), point3(r, -r, 0), point3(0, r, 0), false, make_shared<dialectric>(2.0));
+	objects.add(make_shared<translate>(make_shared<rotate_y>(glass_triangle, 45.0), vec3(x, y, z)));
+
+	x = -45.0;
+	z += 30.0;
+	// Rectangles
+	auto glass_rectangle = make_shared<xy_rect>(-r, r, -r, r, 0, make_shared<dialectric>(1.2));
+	objects.add(make_shared<translate>(make_shared<rotate_y>(glass_rectangle, 45.0), vec3(x, y, z)));
+	x += 30.0;
+	//auto gas_rectangle = make_shared<constant_medium>(make_shared<xy_rect>(-r, r, -r, r, 0, make_shared<isotropic>(color(1, 1, 1))), 0.001, color(0.9, 0.66, 0.11));
+	auto noise_rectangle = make_shared<xy_rect>(-r, r, -r, r, 0, make_shared<lambertian>(make_shared<colored_turbulent_noise>(color::random(), 16.0)));
+	objects.add(make_shared<translate>(make_shared<rotate_y>(noise_rectangle, 45.0), vec3(x, y ,z)));
+	x += 30.0;
+	auto lambertian_rectangle = make_shared<xy_rect>(-r, r, -r, r, 0, make_shared<lambertian>(color(0.2, 0.55, 0.32)));
+	objects.add(make_shared<translate>(make_shared<rotate_y>(lambertian_rectangle, 45.0), vec3(x, y ,z)));
+	x += 30.0;
+	auto metal_rectangle = make_shared<xy_rect>(-r, r, -r, r, 0, make_shared<metal>(color(0.6, 0.62, 0.32), 0.1));
+	objects.add(make_shared<translate>(make_shared<rotate_y>(metal_rectangle, 45.0), vec3(x, y, z)));
+
+	x = -45.0;
+	z += 30.0;
+	// Boxes
+	auto metal_box = make_shared<box>(point3(x - r, y - r, z - r), point3(x + r, y + r, z + r), make_shared<metal>(color(0.6, 0.62, 0.62), 0.1));
+	objects.add(metal_box);
+	x += 30.0;
+	auto glass_box = make_shared<box>(point3(x - r, y - r, z - r), point3(x + r, y + r, z + r), make_shared<dialectric>(1.2));
+	objects.add(glass_box);
+	x += 30.0;
+	auto gas_box = make_shared<constant_medium>(make_shared<box>(point3(x - r, y - r, z - r), point3(x + r, y + r, z + r), make_shared<isotropic>(color(1, 1, 1))), 0.1, color(0.2, 0.46, 0.11));
+	objects.add(gas_box);
+	x += 30.0;
+	auto lambertian_box = make_shared<box>(point3(x - r, y - r, z - r), point3(x + r, y + r, z + r), make_shared<lambertian>(color(0.2, 0.55, 0.32)));
+	objects.add(lambertian_box);
+	return objects;
+}
+
 #endif
 

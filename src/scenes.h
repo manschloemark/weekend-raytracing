@@ -261,6 +261,7 @@ hittable_list book2_final() {
 	objects.add(make_shared<sphere>(point3(250, 150, 45), 50, make_shared<dialectric>(1.5)));
 	objects.add(make_shared<sphere>(point3(0, 150, 145), 50, make_shared<metal>(color(0.8, 0.8, 0.9), 1.0)));
 	
+	/*
 	auto boundary = make_shared<sphere>(point3(360, 150, 145), 70, make_shared<dialectric>(1.5));
 	objects.add(boundary);
 	objects.add(make_shared<constant_medium>(boundary, 0.2, color(0.2, 0.4, 0.9)));
@@ -268,6 +269,7 @@ hittable_list book2_final() {
 	// sample rate. (Talking 10000+)
 	boundary = make_shared<sphere>(point3(0, 0, 0), 5000, make_shared<dialectric>(1.5));
 	objects.add(make_shared<constant_medium>(boundary, .0001, color(1, 1, 1)));
+	*/
 
 	auto emat = make_shared<lambertian>(make_shared<image_texture>("../resources/earth.jpg"));
 	objects.add(make_shared<sphere>(point3(400, 200, 400), 100, emat));

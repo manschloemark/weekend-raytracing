@@ -191,7 +191,6 @@ int main(int argc, char *argv[])
 		lookat = point3(100, 0, 0);
 		vfov = 45.0;
 		aperture = 0.0;
-		//dist_to_focus = (point3(25, 0, 25) - lookfrom).length();
 		dist_to_focus = 100;
 		break;
 	case 4:
@@ -238,6 +237,24 @@ int main(int argc, char *argv[])
 		dist_to_focus = 23.0;
 		vfov = 30.0;
 		break;
+	case 9:
+		//background = color(0.2, 0.2, 0.2);
+		background = color(0, 0, 0);
+		world = glass_and_shadows();
+		lookfrom = point3(0, 0, 20);
+		lookat = point3(0, 0, -5);
+		//dist_to_focus = 10;
+		dist_to_focus = 30;
+		vfov = 40.0;
+		break;
+	case 10:
+		world = ultimate_demo();
+		lookfrom = point3(100, 50, 100);
+		lookat = point3(0, 0, 0);
+		background = color(0.2, 0.2, 0.2);
+		dist_to_focus = (lookat - lookfrom).length();
+		vfov = 30.0;
+		break;
 	default:
 		world = cornell_box();
 		background = color(0, 0, 0);
@@ -277,7 +294,7 @@ int main(int argc, char *argv[])
 
 	int num_pixels = image_width * image_height;
 
-#if 0 // Render by lines (Useless with multithreading because I can't actually create enough threads)
+#if 0 // Render by lines (Useless with multithreading because I can't actually create enough threads in Linux)
 	std::vector<std::future<pixel_data>> pixel_futures;
 	std::cerr << "Rendering...\n";
 	for(int y = image_height - 1; y >= 0; --y)
@@ -442,7 +459,7 @@ int main(int argc, char *argv[])
 		std::vector<pixel_data> chunk = ch.get();
 		for(pixel_data& pd : chunk)
 		{
-		pixels[pd.index] = pd.col;
+			pixels[pd.index] = pd.col;
 		}
 	}
 #endif
