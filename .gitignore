@@ -1,5 +1,9 @@
-*.ppm
+*ppm
 *.exe
 *.o
 resources/
 build/
+src/sphere_importance.cpp
+src/integrate_x_sq.cpp
+src/sph.exe
+src/pdf.exe
