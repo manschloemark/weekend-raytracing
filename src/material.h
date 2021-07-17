@@ -11,7 +11,14 @@ struct hit_record;
 class material {
 	public:
 		virtual bool scatter(
-				const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered ) const = 0;
+				const ray& r_in, const hit_record& rec, color& alb, ray& scattered, double& pdf) const {
+			return false;
+		}
+
+		virtual double scattering_pdf(
+				const ray& r_in, const hit_record& rec, const ray& scattered) const {
+			return 0;
+		}
 
 		virtual color emitted(
 				double u, double v, const point3& p
@@ -24,23 +31,33 @@ class lambertian : public material {
 		lambertian(shared_ptr<texture> a) : albedo(a) {}
 
 		virtual bool scatter(
-				const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
+				const ray& r_in, const hit_record& rec, color& alb, ray& scattered, double& pdf
 			) const override {
 
-			auto scatter_direction = rec.normal + random_unit_vector();
+			//auto scatter_direction = rec.normal + random_unit_vector();
+			auto scatter_direction = random_in_hemisphere(rec.normal);
 
 			// Catch degenerate scatter direction
 			if (scatter_direction.near_zero())
 				scatter_direction = rec.normal;
-			scattered = ray(rec.p, scatter_direction, r_in.time());
-			attenuation = albedo->value(rec.u, rec.v, rec.p);
+			scattered = ray(rec.p, unit_vector(scatter_direction), r_in.time());
+			alb = albedo->value(rec.u, rec.v, rec.p);
+			//pdf = dot(rec.normal, scattered.direction()) / pi;
+			pdf = 0.5 / pi;
 			return true;
 		}
+
+		double scattering_pdf(
+				const ray& r_in, const hit_record& rec, const ray& scattered) const override {
+			auto cosine = dot(rec.normal, unit_vector(scattered.direction()));
+			return cosine < 0 ? 0 : cosine / pi;
+		}
+
 
 	public:
 		shared_ptr<texture> albedo;
 };
-
+#if 0
 class metal : public material {
 	public:
 		metal (const color& a, double f) : albedo(make_shared<solid_color>(a)), fuzz(f < 1 ? f : 1) {}
@@ -107,13 +124,13 @@ class dialectric : public material {
       return r0 + (1 - r0) * pow((1 - cosine), 5);
 		}
 };
-
+#endif
 class diffuse_light : public material {
 	public:
 		diffuse_light(shared_ptr<texture> a) : emit(a) {}
 		diffuse_light(color c) : emit(make_shared<solid_color>(c)) {}
 
-		virtual bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override {
+		virtual bool scatter(const ray& r_in, const hit_record& rec, color& alb, ray& scattered, double& pdf) const override {
 			return false;
 		}
 
@@ -124,7 +141,7 @@ class diffuse_light : public material {
 	public:
 		shared_ptr<texture> emit;
 };
-
+#if 0
 class diffuse_light_dim_edges : public material {
 	public:
 		diffuse_light_dim_edges(shared_ptr<texture> a, double w) : emit(a), width(w) {}
@@ -174,5 +191,5 @@ class isotropic : public material {
 	public:
 		shared_ptr<texture> albedo;
 };
-
+#endif
 #endif

@@ -16,12 +16,15 @@
 #include "sphere.h"
 #include "moving_sphere.h"
 #include "camera.h"
-#include "scenes.h"
+//#include "scenes.h" TODO UNCOMMENT
 #include "bvh.h"
 
 // My files
 #include "timer.h"
-#include "demo_scenes.h"
+//#include "demo_scenes.h" TODO UNCOMMENT
+
+// TEMP
+#include "pdf_scene.h"
 
 const char *argp_program_version = "weekend-raytracing 0.2.2";
 const char *argp_program_bug_address = "<markofwisdumb@gmail.com>";
@@ -121,13 +124,16 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
 
 	ray scattered;
 	color attenuation;
-
 	color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+	double pdf;
+	color albedo;
 
-	if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+	if (!rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf))
 		return emitted;
 
-	return emitted + attenuation * ray_color(scattered, background, world, depth - 1);
+	return emitted
+				 + albedo * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+									* ray_color(scattered, background, world, depth - 1) / pdf;
 }
 
 
@@ -168,6 +174,7 @@ int main(int argc, char *argv[])
 	timer t;
 	t.start();
 	switch(arguments.scene) {
+		/* TODO DELETE THIS
 	case 1:
 		world = book1_final();
 		background = color(0.7, 0.8, 1.0);
@@ -255,6 +262,21 @@ int main(int argc, char *argv[])
 		dist_to_focus = (lookat - lookfrom).length();
 		vfov = 30.0;
 		break;
+		*/ // TODO DELETE THIS
+	case 11:
+		world = lambertian_cornell_box();
+		background = color(0, 0, 0);
+
+		samples_per_pixel = 100;
+		max_depth = 50;
+		image_width = 600;
+		image_height = 600;
+
+		lookfrom = point3(278, 278, -800);
+		lookat = point3(278, 278, 0);
+		vfov = 40.0;
+		break;
+		/* TODO DELETE THIS
 	default:
 		world = cornell_box();
 		background = color(0, 0, 0);
@@ -263,6 +285,7 @@ int main(int argc, char *argv[])
 		lookat = point3(278, 278, 0);
 		vfov = 40.0;
 		break;
+		DELETE THIS */
 	}
 
 	auto aspect_ratio = (double)image_width / (double)image_height;
