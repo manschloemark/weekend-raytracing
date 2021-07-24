@@ -20,7 +20,7 @@ class material {
 			return 0;
 		}
 
-		virtual color emitted(
+		virtual color emitted( const ray& r_in, const hit_record& rec,
 				double u, double v, const point3& p
 				) const { return color(0, 0, 0); }
 };
@@ -33,9 +33,12 @@ class lambertian : public material {
 		virtual bool scatter(
 				const ray& r_in, const hit_record& rec, color& alb, ray& scattered, double& pdf
 			) const override {
+			onb uvw;
+			uvw.build_from_w(rec.normal);
 
 			//auto scatter_direction = rec.normal + random_unit_vector();
-			auto scatter_direction = random_in_hemisphere(rec.normal);
+			//auto scatter_direction = random_in_hemisphere(rec.normal);
+			auto scatter_direction = uvw.local(random_cosine_direction());
 
 			// Catch degenerate scatter direction
 			if (scatter_direction.near_zero())
@@ -43,7 +46,8 @@ class lambertian : public material {
 			scattered = ray(rec.p, unit_vector(scatter_direction), r_in.time());
 			alb = albedo->value(rec.u, rec.v, rec.p);
 			//pdf = dot(rec.normal, scattered.direction()) / pi;
-			pdf = 0.5 / pi;
+			//pdf = 0.5 / pi;
+			pdf = dot(uvw.w(), scattered.direction()) / pi;
 			return true;
 		}
 
@@ -134,7 +138,9 @@ class diffuse_light : public material {
 			return false;
 		}
 
-		virtual color emitted(double u, double v, const point3& p) const override {
+		virtual color emitted(const ray& r_in, const hit_record& rec, double u, double v, const point3& p) const override {
+			if (!rec.front_face)
+				return color(0, 0, 0);
 			return emit->value(u, v, p);
 		}
 

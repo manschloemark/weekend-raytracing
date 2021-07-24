@@ -25,6 +25,7 @@
 
 // TEMP
 #include "pdf_scene.h"
+#include "pdf.h"
 
 const char *argp_program_version = "weekend-raytracing 0.2.2";
 const char *argp_program_bug_address = "<markofwisdumb@gmail.com>";
@@ -110,7 +111,8 @@ struct pixel_data
 	unsigned int index;
 };
 
-color ray_color(const ray& r, const color& background, const hittable& world, int depth)
+color ray_color(const ray& r, const color& background,
+                const hittable& world, shared_ptr<hittable>& lights, int depth)
 {
 	hit_record rec;
 
@@ -124,16 +126,22 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
 
 	ray scattered;
 	color attenuation;
-	color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-	double pdf;
+	color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
+	double pdf_val;
 	color albedo;
 
-	if (!rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf))
+	if (!rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf_val))
 		return emitted;
+
+	auto p0 = make_shared<hittable_pdf>(lights, rec.p);
+	auto p1 = make_shared<cosine_pdf>(rec.normal);
+	mixture_pdf mix_pdf(p0, p1);
+	scattered = ray(rec.p, mix_pdf.generate(), r.time());
+	pdf_val = mix_pdf.value(scattered.direction());
 
 	return emitted
 				 + albedo * rec.mat_ptr->scattering_pdf(r, rec, scattered)
-									* ray_color(scattered, background, world, depth - 1) / pdf;
+									* ray_color(scattered, background, world, lights, depth - 1) / pdf_val;
 }
 
 
@@ -147,7 +155,7 @@ int main(int argc, char *argv[])
 	arguments.image_width = 480;
 	arguments.image_height = 480;
 	arguments.scene = -1;
-	arguments.samples_per_pixel = 100;
+	arguments.samples_per_pixel = 10;
 	arguments.max_depth = 50;
 	arguments.num_threads = std::thread::hardware_concurrency() / 2;
 
@@ -170,6 +178,8 @@ int main(int argc, char *argv[])
 
 	hittable_list world;
 	color background(0, 0, 0);
+
+  shared_ptr<hittable> lights = make_shared<xz_rect>(213, 343, 227, 332, 554, shared_ptr<material>());
 
 	timer t;
 	t.start();
@@ -267,7 +277,6 @@ int main(int argc, char *argv[])
 		world = lambertian_cornell_box();
 		background = color(0, 0, 0);
 
-		samples_per_pixel = 100;
 		max_depth = 50;
 		image_width = 600;
 		image_height = 600;
@@ -431,7 +440,7 @@ int main(int argc, char *argv[])
 			w = (i > 0) ? chunk_width : chunk_width + extra_width;
 			// Make a future for each chunk
 			auto future = std::async(std::launch::async,// | std::launch::deferred,
-			[&cam, &bvh, &background, &max_depth, &samples_per_pixel,
+			[&cam, &bvh, &lights, &background, &max_depth, &samples_per_pixel,
 			i, j, w, h, image_width, image_height, &pixels_cv]() -> 
 			std::vector<pixel_data> {
 						std::vector<pixel_data> chunk_pixels;
@@ -448,7 +457,7 @@ int main(int argc, char *argv[])
 									auto u = double(x + random_double()) / (image_width - 1);
 									auto v = double(y + random_double()) / (image_height - 1);
 									ray r = cam.get_ray(u, v);
-									pixel_color += ray_color(r, background, bvh, max_depth);
+									pixel_color += ray_color(r, background, bvh, lights, max_depth);
 								}
 								pixel_data pixel = {};
 								pixel.col = normalize(pixel_color, samples_per_pixel);
