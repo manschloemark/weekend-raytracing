@@ -17,6 +17,10 @@ void write_color(std::ostream &out, const color& pixel_color, int samples_per_pi
 	auto g = pixel_color.y();
 	auto b = pixel_color.z();
 
+	if(r != r) r = 0.0;
+	if(g != g) g = 0.0;
+	if(b != b) b = 0.0;
+
 	/* Moving this to it's own inline function so it can be done in multithreading
 	auto scale = 1.0 / samples_per_pixel;
 	r = sqrt(scale * r);

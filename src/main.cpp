@@ -112,7 +112,7 @@ struct pixel_data
 };
 
 color ray_color(const ray& r, const color& background,
-                const hittable& world, shared_ptr<hittable>& lights, int depth)
+                const hittable& world, shared_ptr<hittable> lights, int depth)
 {
 	hit_record rec;
 
@@ -124,23 +124,25 @@ color ray_color(const ray& r, const color& background,
 	if (!world.hit(r, 0.001, infinity, rec))
 		return background;
 
-	ray scattered;
-	color attenuation;
+	scatter_record srec;
 	color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
-	double pdf_val;
-	color albedo;
 
-	if (!rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf_val))
+	if (!rec.mat_ptr->scatter(r, rec, srec))
 		return emitted;
 
-	auto p0 = make_shared<hittable_pdf>(lights, rec.p);
-	auto p1 = make_shared<cosine_pdf>(rec.normal);
-	mixture_pdf mix_pdf(p0, p1);
-	scattered = ray(rec.p, mix_pdf.generate(), r.time());
-	pdf_val = mix_pdf.value(scattered.direction());
+	if(srec.is_specular)
+	{
+		return srec.attenuation * ray_color(srec.specular_ray, background, world, lights, depth - 1);
+	}
+
+	auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
+	mixture_pdf mix_pdf(light_ptr, srec.pdf_ptr);
+
+	ray scattered = ray(rec.p, mix_pdf.generate(), r.time());
+	auto pdf_val = mix_pdf.value(scattered.direction());
 
 	return emitted
-				 + albedo * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+				 + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
 									* ray_color(scattered, background, world, lights, depth - 1) / pdf_val;
 }
 
@@ -179,7 +181,9 @@ int main(int argc, char *argv[])
 	hittable_list world;
 	color background(0, 0, 0);
 
-  shared_ptr<hittable> lights = make_shared<xz_rect>(213, 343, 227, 332, 554, shared_ptr<material>());
+  auto lights = make_shared<hittable_list>();
+	lights->add(make_shared<xz_rect>(213, 343, 227, 332, 554, shared_ptr<material>()));
+	lights->add(make_shared<sphere>(point3(190, 90, 190), 90, shared_ptr<material>()));
 
 	timer t;
 	t.start();

@@ -39,6 +39,9 @@ class translate : public hittable {
 
 	virtual bool bounding_box(double time0, double time1, aabb& output_box) const override;
 
+		virtual double pdf_value(const point3& o, const vec3& v) const override { return ptr->pdf_value(o, v); }
+
+		virtual vec3 random(const vec3& o) const override { return ptr->random(o); }
 	public:
 	shared_ptr<hittable> ptr;
 	vec3 offset;
@@ -85,6 +88,10 @@ class rotate_x : public hittable {
             output_box = bbox;
             return hasbox;
         }
+
+		virtual double pdf_value(const point3& o, const vec3& v) const override { return ptr->pdf_value(o, v); }
+
+		virtual vec3 random(const vec3& o) const override { return ptr->random(o); }
 
 	public:
 		shared_ptr<hittable> ptr;
@@ -165,6 +172,10 @@ class rotate_y : public hittable {
             return hasbox;
         }
 
+		virtual double pdf_value(const point3& o, const vec3& v) const override { return ptr->pdf_value(o, v); }
+
+		virtual vec3 random(const vec3& o) const override { return ptr->random(o); }
+
 	public:
 		shared_ptr<hittable> ptr;
 		double sin_theta;
@@ -243,6 +254,10 @@ class rotate_z : public hittable {
             output_box = bbox;
             return hasbox;
         }
+
+		virtual double pdf_value(const point3& o, const vec3& v) const override { return ptr->pdf_value(o, v); }
+
+		virtual vec3 random(const vec3& o) const override { return ptr->random(o); }
 
 	public:
 		shared_ptr<hittable> ptr;
@@ -328,6 +343,10 @@ class flip_face : public hittable {
 		virtual bool bounding_box(double time0, double time1, aabb& output_box) const override {
 			return ptr->bounding_box(time0, time1, output_box);
 		}
+
+		virtual double pdf_value(const point3& o, const vec3& v) const override { return ptr->pdf_value(o, v); }
+
+		virtual vec3 random(const vec3& o) const override { return ptr->random(o); }
 
 	public:
 		shared_ptr<hittable> ptr;
