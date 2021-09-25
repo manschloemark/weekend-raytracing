@@ -1,5 +1,12 @@
-#Ray Tracing in One Weekend
+# Ray Tracing in One Weekend
 
-I'm reading the books, titled above, because I want to implement my own ray tracer.
-Right now I'm literally copying this... which is not what my goal is.
-But I need to learn a lot about c and c++, so I think following this is helping.
+CPU based Ray Tracer based off of Peter Shirley's 'Ray Tracing in One Weekend' book series with some extra features added on.
+
+## My Additions
+1. Parallel processing  
+1. Triangle rendering
+1. Command Line Argument Parsing
+1. Some fun textures
+1. A lot of different scenes
+
+Check out manschloemark.github.io for some images created with this.
